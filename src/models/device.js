@@ -8,13 +8,6 @@ const db = new MySQLConnector(config.db);
  * Device model class.
  */
 class Device {
-    uuid;
-    instanceName;
-    accountUsername;
-    lastHost;
-    lastSeen;
-    lastLat;
-    lastLon;
 
     /**
      * Initalize new Device object.

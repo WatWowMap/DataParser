@@ -8,16 +8,6 @@ const db = new MySQLConnector(config.db);
  * Account model class.
  */
 class Account {
-    username;
-    password;
-    firstWarningTimestamp;
-    failedTimestamp;
-    failed;
-    level;
-    lastEncounterLat;
-    lastEncounterLon;
-    lastEncounterTime;
-    hasTicket;
 
     /**
      * Initalize new Account object.
@@ -64,30 +54,27 @@ class Account {
         ORDER BY level DESC, RAND()
         LIMIT 1
         `;
-        let result = await db.query(sql, [minLevel, maxLevel])
+        let results = await db.query(sql, [minLevel, maxLevel])
             .then(x => x)
             .catch(err => { 
                 console.error('[Account] Failed to get new Account', err);
                 return null;
             });
-        let account;
-        if (result) {
-            let keys = Object.values(result);
-            keys.forEach(key => {
-                account = new Account(
-                    key.username,
-                    key.password,
-                    key.first_warning_timestamp,
-                    key.failed_timestamp,
-                    key.failed,
-                    key.level,
-                    key.last_encounter_lat,
-                    key.last_encounter_lon,
-                    key.last_encounter_time
-                );
-            });
+        if (results && results.length > 0) {
+            const result = results[0];
+            return new Account(
+                result.username,
+                result.password,
+                result.first_warning_timestamp,
+                result.failed_timestamp,
+                result.failed,
+                result.level,
+                result.last_encounter_lat,
+                result.last_encounter_lon,
+                result.last_encounter_time
+            );
         }
-        return account;
+        return null;
     }
 
     /**
@@ -102,28 +89,27 @@ class Account {
         LIMIT 1
         `;
         let args = [username];
-        let result = await db.query(sql, args)
+        let results = await db.query(sql, args)
             .then(x => x)
             .catch(err => { 
                 console.error('[Account] Failed to get Account with username', username, 'Error:', err);
                 return null;
             });
-        let account;
-        let keys = Object.values(result);
-        keys.forEach(key => {
-            account = new Account(
-                key.username,
-                key.password,
-                key.first_warning_timestamp,
-                key.failed_timestamp,
-                key.failed,
-                key.level,
-                key.last_encounter_lat,
-                key.last_encounter_lon,
-                key.last_encounter_time
+        if (results && results.length > 0) {
+            const result = results[i];
+            return new Account(
+                result.username,
+                result.password,
+                result.first_warning_timestamp,
+                result.failed_timestamp,
+                result.failed,
+                result.level,
+                result.last_encounter_lat,
+                result.last_encounter_lon,
+                result.last_encounter_time
             );
-        })
-        return account;
+        }
+        return null;
     }
 
     /**
@@ -175,23 +161,21 @@ class Account {
      * @param update 
      */
     async save(update) {
-
-        let sql = '';
-        let args = [];
-        if (update) {
-            sql = `
-            UPDATE account
-            SET password = ?, level = ?, first_warning_timestamp = ?, failed_timestamp = ?, failed = ?, last_encounter_lat = ?, last_encounter_lon = ?, last_encounter_time = ?
-            WHERE username = ?
-            `;
-            args = [this.password, this.level, this.firstWarningTimestamp, this.failedTimestamp, this.failed, this.lastEncounterLat, this.lastEncounterLon, this.lastEncounterTime, this.username];
-        } else {
-            sql = `
-            INSERT INTO account (username, password, level, first_warning_timestamp, failed_timestamp, failed, last_encounter_lat, last_encounter_lon, last_encounter_time)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `;
-            args = [this.username, this.password, this.level, this.firstWarningTimestamp, this.failedTimestamp, this.failed, this.lastEncounterLat, this.lastEncounterLon, this.lastEncounterTime];
-        }
+        const sql = `
+        INSERT INTO account (username, password, level, first_warning_timestamp, failed_timestamp, failed, last_encounter_lat, last_encounter_lon, last_encounter_time)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE UPDATE
+        username=VALUES(username),
+        username=VALUES(password),
+        username=VALUES(level),
+        username=VALUES(first_warning_timestamp),
+        username=VALUES(failed_timestamp),
+        username=VALUES(failed),
+        username=VALUES(last_encounter_lat),
+        username=VALUES(last_encounter_lon),
+        username=VALUES(last_encounter_time)
+        `;
+        const args = [this.username, this.password, this.level, this.firstWarningTimestamp, this.failedTimestamp, this.failed, this.lastEncounterLat, this.lastEncounterLon, this.lastEncounterTime];
         let result = await db.query(sql, args)
             .then(x => x)
             .catch(err => {

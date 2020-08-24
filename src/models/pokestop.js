@@ -182,80 +182,80 @@ class Pokestop {
             let condition = quest.goal.condition[i];
             let conditionData = {};
             let infoData = {};
-            conditionData["type"] = condition.type;
+            conditionData['type'] = condition.type;
             // TODO: Needs testing
             let info = condition;
             switch (condition.type) {
                 case ConditionType.BadgeType:
-                    infoData["amount"] = info.badge_type.amount;
-                    infoData["badge_rank"] = info.badge_rank;
+                    infoData['amount'] = info.badge_type.amount;
+                    infoData['badge_rank'] = info.badge_rank;
                     let badgeTypesById = [];
                     info.badge_type.forEach(badge => badgeTypesById.push(badge));
-                    infoData["badge_types"] = badgeTypesById;
+                    infoData['badge_types'] = badgeTypesById;
                     break;
                 case ConditionType.Item:
                     if (info.item !== 0) {
-                        infoData["item_id"] = info.item;
+                        infoData['item_id'] = info.item;
                     }
                     break;
                 case ConditionType.RaidLevel:
                     let raidLevelById = [];
                     info.with_raid_level.raid_level.forEach(raidLevel => raidLevelById.push(raidLevel));
-                    infoData["raid_levels"] = raidLevelById;
+                    infoData['raid_levels'] = raidLevelById;
                     break;
                 case ConditionType.PokemonType:
                     let pokemonTypesById = [];
                     info.with_pokemon_type.pokemon_type.forEach(type => pokemonTypesById.push(type));
-                    infoData["pokemon_type_ids"] = pokemonTypesById;
+                    infoData['pokemon_type_ids'] = pokemonTypesById;
                     break;
                 case ConditionType.PokemonCategory:
                     if (info.with_pokemon_category.category_name) {
-                        infoData["category_name"] = info.with_pokemon_category.category_name; // TODO: Does with_pokemon_category.category_name exist?
+                        infoData['category_name'] = info.with_pokemon_category.category_name; // TODO: Does with_pokemon_category.category_name exist?
                     }
                     if (info.with_pokemon_category.pokemon_ids) {
-                        infoData["pokemon_ids"] = info.with_pokemon_category.pokemon_ids;
+                        infoData['pokemon_ids'] = info.with_pokemon_category.pokemon_ids;
                     }
                     break;
                 case ConditionType.WinRaidStatus:
                     break;
                 case ConditionType.ThrowType:
                     if (info.with_throw_type.throw_type > 0) {
-                        infoData["throw_type_id"] = info.with_throw_type.throw_type;
+                        infoData['throw_type_id'] = info.with_throw_type.throw_type;
                     }
                     break;
                 case ConditionType.ThrowTypeInARow:
                     if (info.with_throw_type.throw_type > 0) {
-                        infoData["throw_type_id"] = info.with_throw_type.throw_type;
+                        infoData['throw_type_id'] = info.with_throw_type.throw_type;
                     }
                     break;
                 case ConditionType.Location:
-                    infoData["cell_ids"] = info.s2_cell_id;
+                    infoData['cell_ids'] = info.s2_cell_id;
                     break;
                 case ConditionType.Distance:
-                    infoData["distance"] = info.distance_km;
+                    infoData['distance'] = info.distance_km;
                     break;
                 case ConditionType.PokemonAlignment:
-                    infoData["alignment_ids"] = info.pokemon_alignment.alignment.map(x => parseInt(x));
+                    infoData['alignment_ids'] = info.pokemon_alignment.alignment.map(x => parseInt(x));
                     break;
                 case ConditionType.InvasionCharacter:
-                    infoData["character_category_ids"] = info.with_invasion_character.category.map(x => parseInt(x));
+                    infoData['character_category_ids'] = info.with_invasion_character.category.map(x => parseInt(x));
                     break;
                 case ConditionType.NpcCombat:
-                    infoData["win"] = info.with_npc_combat.requires_win || false; // TODO: requires_win exists?
-                    infoData["trainer_ids"] = info.with_npc_combat.combat_npc_trainer_id;
+                    infoData['win'] = info.with_npc_combat.requires_win || false; // TODO: requires_win exists?
+                    infoData['trainer_ids'] = info.with_npc_combat.combat_npc_trainer_id;
                     break;
                 case ConditionType.PvpCombat:
-                    infoData["win"] = info.with_pvp_combat.requires_win || false; // TODO: requires_win exists?
-                    infoData["trainer_ids"] = info.with_pvp_combat.combat_league_template_id;
+                    infoData['win'] = info.with_pvp_combat.requires_win || false; // TODO: requires_win exists?
+                    infoData['trainer_ids'] = info.with_pvp_combat.combat_league_template_id;
                     break;
                 case ConditionType.Buddy:
                     if (info.with_buddy) {
-                        infoData["min_buddy_level"] = info.with_buddy.min_buddy_level; // TODO: with_buddy? is Condition
-                        infoData["must_be_on_map"] = info.with_buddy.must_be_on_map;
+                        infoData['min_buddy_level'] = info.with_buddy.min_buddy_level; // TODO: with_buddy? is Condition
+                        infoData['must_be_on_map'] = info.with_buddy.must_be_on_map;
                     }
                     break;
                 case ConditionType.DailyBuddyAffection:
-                    infoData["min_buddy_affection_earned_today"] = info.daily_buddy_affection.min_buddy_affection_earned_today;
+                    infoData['min_buddy_affection_earned_today'] = info.daily_buddy_affection.min_buddy_affection_earned_today;
                     break;
                 case ConditionType.WinGymBattleStatus: break;
                 case ConditionType.SuperEffectiveCharge: break;
@@ -273,7 +273,7 @@ class Pokestop {
                 case ConditionType.Unset: break;
             }
             if (infoData) {
-                conditionData["info"] = infoData;
+                conditionData['info'] = infoData;
             }
             conditions.push(conditionData);
         }
@@ -281,44 +281,44 @@ class Pokestop {
             let reward = quest.quest_rewards[i];
             let rewardData = {};
             let infoData = {};
-            rewardData["type"] = reward.type;
+            rewardData['type'] = reward.type;
             switch (reward.type) {
                 case QuestReward.AvatarClothing:
                     break;
                 case QuestReward.Candy:
-                    infoData["amount"] = reward.amount;
-                    infoData["pokemon_id"] = reward.pokemon_id;
+                    infoData['amount'] = reward.amount;
+                    infoData['pokemon_id'] = reward.pokemon_id;
                     break;
                 case QuestReward.Experience:
-                    infoData["amount"] = reward.exp;
+                    infoData['amount'] = reward.exp;
                     break;
                 case QuestReward.Item:
-                    infoData["amount"] = reward.item.amount;
-                    infoData["item_id"] = reward.item.item;
+                    infoData['amount'] = reward.item.amount;
+                    infoData['item_id'] = reward.item.item;
                     break;
                 case QuestReward.PokemonEncounter:
                     if (reward.pokemon_encounter.is_hidden_ditto) {
-                        infoData["pokemon_id"] = 132;
-                        infoData["pokemon_id_display"] = reward.pokemon_encounter.pokemon_id;
+                        infoData['pokemon_id'] = 132;
+                        infoData['pokemon_id_display'] = reward.pokemon_encounter.pokemon_id;
                     } else {
-                        infoData["pokemon_id"] = reward.pokemon_encounter.pokemon_id;
+                        infoData['pokemon_id'] = reward.pokemon_encounter.pokemon_id;
                     }
                     if (reward.pokemon_encounter.pokemon_display) {
-                        infoData["costume_id"] = reward.pokemon_encounter.pokemon_display.costume || 0;
-                        infoData["form_id"] = reward.pokemon_encounter.pokemon_display.form || 0;
-                        infoData["gender_id"] = reward.pokemon_encounter.pokemon_display.gender || 0;
-                        infoData["shiny"] = reward.pokemon_encounter.pokemon_display.shiny || false;
+                        infoData['costume_id'] = reward.pokemon_encounter.pokemon_display.costume || 0;
+                        infoData['form_id'] = reward.pokemon_encounter.pokemon_display.form || 0;
+                        infoData['gender_id'] = reward.pokemon_encounter.pokemon_display.gender || 0;
+                        infoData['shiny'] = reward.pokemon_encounter.pokemon_display.shiny || false;
                     }
                     break;
                 case QuestReward.Quest:
                     break;
                 case QuestReward.Stardust:
-                    infoData["amount"] = reward.stardust;
+                    infoData['amount'] = reward.stardust;
                     break;
                 case QuestReward.Unset:
                     break;
             }
-            rewardData["info"] = infoData;
+            rewardData['info'] = infoData;
             rewards.push(rewardData);
         }
         this.questConditions = conditions;

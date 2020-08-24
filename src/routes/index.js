@@ -181,8 +181,7 @@ class RouteController {
                     });
                     return;
                 }
-            }
-            else{
+            } else {
                 console.error('[Controller] Failed to get event account, device or account is null.');
                 return res.sendStatus(400);
             }
@@ -334,13 +333,13 @@ class RouteController {
                             // TODO: Parse GetPlayerResponse
                             if (gpr.success) {
                                 let data = gpr.player_data;
-                                console.debug("[Raw] GetPlayerData:", data);
+                                console.debug('[Raw] GetPlayerData:', data);
                             }
                         } else {
-                            console.error("[Raw] Malformed GetPlayerResponse");
+                            console.error('[Raw] Malformed GetPlayerResponse');
                         }
                     } catch (err) {
-                        console.error("[Raw] Unable to decode GetPlayerResponse");
+                        console.error('[Raw] Unable to decode GetPlayerResponse');
                     }
                     break;
                 case 4: // GetHoloInventoryResponse
@@ -355,10 +354,10 @@ class RouteController {
                                 quests.push(quest);
                             }
                         } else {
-                            console.error("[Raw] Malformed FortSearchResponse");
+                            console.error('[Raw] Malformed FortSearchResponse');
                         }
                     } catch (err) {
-                        console.error("[Raw] Unable to decode FortSearchResponse");
+                        console.error('[Raw] Unable to decode FortSearchResponse');
                     }
                     break;
                 case 102: // EncounterResponse
@@ -381,10 +380,10 @@ class RouteController {
                         if (fdr) {
                             fortDetails.push(fdr);
                         } else {
-                            console.error("[Raw] Malformed FortDetailsResponse");
+                            console.error('[Raw] Malformed FortDetailsResponse');
                         }
                     } catch (err) {
-                        console.error("[Raw] Unable to decode FortDetailsResponse");
+                        console.error('[Raw] Unable to decode FortDetailsResponse');
                     }
                     break;
                 case 106: // GetMapObjectsResponse
@@ -395,7 +394,7 @@ class RouteController {
                             isInvalidGMO = false;
                             let mapCellsNew = gmo.map_cells;
                             if (mapCellsNew.length === 0) {
-                                console.debug("[Raw] Map cells is empty");
+                                console.debug('[Raw] Map cells is empty');
                                 return res.sendStatus(400);
                             }
                             mapCellsNew.forEach((mapCell) => {
@@ -442,21 +441,21 @@ class RouteController {
                                         emptyCells[cell] = count + 1;
                                     }
                                     if (count === 3) {
-                                        console.debug("[Raw] Cell " + cell + " was empty 3 times in a row. Assuming empty.");
+                                        console.debug('[Raw] Cell', cell, 'was empty 3 times in a row. Assuming empty.');
                                         cells.push(cell);
                                     }
                                 });
                                 
-                                console.debug("[Raw] GMO is empty.");
+                                console.debug('[Raw] GMO is empty.');
                             } else {
                                 cells.forEach(cell => emptyCells[cell] = 0);
                                 isEmptyGMO = false;
                             }
                         } else {
-                            console.error("[Raw] Malformed GetMapObjectsResponse");
+                            console.error('[Raw] Malformed GetMapObjectsResponse');
                         }
                     } catch (err) {
-                        console.error("[Raw] Unable to decode GetMapObjectsResponse");
+                        console.error('[Raw] Unable to decode GetMapObjectsResponse');
                     }
                     break;
                 case 156: // GymGetInfoResponse
@@ -465,10 +464,10 @@ class RouteController {
                         if (ggi) {
                             gymInfos.push(ggi);
                         } else {
-                            console.error("[Raw] Malformed GymGetInfoResponse");
+                            console.error('[Raw] Malformed GymGetInfoResponse');
                         }
                     } catch (err) {
-                        console.error("[Raw] Unable to decode GymGetInfoResponse");
+                        console.error('[Raw] Unable to decode GymGetInfoResponse');
                     }
                     break;
                 default:
@@ -544,38 +543,7 @@ class RouteController {
                         timestampMs: wild.timestamp_ms,
                         wild: wild.data
                     });
-                    this.updatePokemonValues(pokemon);
-
-                    if (pokemon.spawnId) {
-                        let spawnpoint;
-                        if (pokemon.expireTimestampVerified && pokemon.expireTimestamp) {
-                            let date = moment(pokemon.expireTimestamp).format('mm:ss');
-                            let split = date.split(':');
-                            let minute = parseInt(split[0]);
-                            let second = parseInt(split[1]);
-                            let secondOfHour = second + minute * 60;
-                            spawnpoint = new Spawnpoint(
-                                pokemon.spawnId,
-                                pokemon.lat,
-                                pokemon.lon,
-                                secondOfHour,
-                                pokemon.updated
-                            );
-                        } else {
-                            spawnpoint = new Spawnpoint(
-                                pokemon.spawnId,
-                                pokemon.lat,
-                                pokemon.lon,
-                                null,
-                                pokemon.updated
-                            );
-                        }
-                        try {
-                            await spawnpoint.save(true);
-                        } catch (err) {
-                            console.error('[Spawnpoint] Error:', err);
-                        }
-                    }
+                    await this.updatePokemonValues(pokemon);
         
                     if (pokemon.lat === undefined && pokemon.pokestopId) {
                         if (pokemon.pokestopId) {
@@ -621,14 +589,14 @@ class RouteController {
                         ${pokemon.weight || null},
                         ${pokemon.size || null},
                         ${pokemon.displayPokemonId || null},
-                        ${pokemon.pokestopId ? "'" + pokemon.pokestopId + "'" : null},
+                        ${pokemon.pokestopId ? '\'' + pokemon.pokestopId + '\'' : null},
                         ${pokemon.updated || null},
                         ${pokemon.firstSeenTimestamp || null},
                         ${pokemon.changed || null},
                         ${pokemon.cellId || null},
                         ${pokemon.expireTimestampVerified || 0},
                         ${pokemon.shiny || null},
-                        ${pokemon.username ? "'" + pokemon.username + "'" : null},
+                        ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
                         ${pokemon.capture3 || null}
@@ -698,7 +666,7 @@ class RouteController {
                         //timestampMs: nearbyPokemon.timestamp_ms,
                         nearby: nearby.data
                     });
-                    this.updatePokemonValues(pokemon);
+                    await this.updatePokemonValues(pokemon);
         
                     if ((pokemon.lat === undefined || pokemon.lat === null) && pokemon.pokestopId) {
                         if (pokemon.pokestopId) {
@@ -747,14 +715,14 @@ class RouteController {
                         ${pokemon.weight || null},
                         ${pokemon.size || null},
                         ${pokemon.displayPokemonId || null},
-                        ${pokemon.pokestopId ? "'" + pokemon.pokestopId + "'" : null},
+                        ${pokemon.pokestopId ? '\'' + pokemon.pokestopId + '\'' : null},
                         ${pokemon.updated || null},
                         ${pokemon.firstSeenTimestamp || null},
                         ${pokemon.changed || null},
                         ${pokemon.cellId || null},
                         ${pokemon.expireTimestampVerified || 0},
                         ${pokemon.shiny || null},
-                        ${pokemon.username ? "'" + pokemon.username + "'" : null},
+                        ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
                         ${pokemon.capture3 || null}
@@ -902,6 +870,37 @@ class RouteController {
                 console.log('[POKEMON] Pokemon', pokemon.id, 'Ditto changed from', oldPokemon.pokemonId, 'to', pokemon.pokemonId);
             }
         }
+
+        if (pokemon.spawnId) {
+            let spawnpoint;
+            if (pokemon.expireTimestampVerified && pokemon.expireTimestamp) {
+                let date = moment(pokemon.expireTimestamp).format('mm:ss');
+                let split = date.split(':');
+                let minute = parseInt(split[0]);
+                let second = parseInt(split[1]);
+                let secondOfHour = second + minute * 60;
+                spawnpoint = new Spawnpoint(
+                    pokemon.spawnId,
+                    pokemon.lat,
+                    pokemon.lon,
+                    secondOfHour,
+                    pokemon.updated
+                );
+            } else {
+                spawnpoint = new Spawnpoint(
+                    pokemon.spawnId,
+                    pokemon.lat,
+                    pokemon.lon,
+                    null,
+                    pokemon.updated
+                );
+            }
+            try {
+                await spawnpoint.save(true);
+            } catch (err) {
+                console.error('[Spawnpoint] Error:', err);
+            }
+        }
     }
 
     async updateForts(forts) {
@@ -922,8 +921,8 @@ class RouteController {
                                 '${gym.id}',
                                 ${gym.lat},
                                 ${gym.lon},
-                                ${gym.name ? "'" + gym.name + "'" : null},
-                                ${gym.url ? "'" + gym.url + "'" : null},
+                                ${gym.name ? '\'' + gym.name + '\'' : null},
+                                ${gym.url ? '\'' + gym.url + '\'' : null},
                                 ${gym.lastModifiedTimestamp},
                                 ${gym.raidEndTimestamp},
                                 ${gym.raidSpawnTimestamp},
@@ -965,8 +964,8 @@ class RouteController {
                                 '${pokestop.id}',
                                 ${pokestop.lat},
                                 ${pokestop.lon},
-                                ${pokestop.name ? "'" + pokestop.name + "'" : null},
-                                ${pokestop.url ? "'" + pokestop.url + "'" : null},
+                                ${pokestop.name ? '\'' + pokestop.name + '\'' : null},
+                                ${pokestop.url ? '\'' + pokestop.url + '\'' : null},
                                 ${pokestop.lureExpireTimestamp},
                                 ${pokestop.lastModifiedTimestamp},
                                 ${pokestop.updated},
@@ -1313,14 +1312,14 @@ class RouteController {
                         ${pokemon.weight || null},
                         ${pokemon.size || null},
                         ${pokemon.displayPokemonId || null},
-                        ${pokemon.pokestopId ? "'" + pokemon.pokestopId + "'" : null},
+                        ${pokemon.pokestopId ? '\'' + pokemon.pokestopId + '\'' : null},
                         ${pokemon.updated || null},
                         ${pokemon.firstSeenTimestamp || null},
                         ${pokemon.changed || null},
                         ${pokemon.cellId || null},
                         ${pokemon.expireTimestampVerified || 0},
                         ${pokemon.shiny || null},
-                        ${pokemon.username ? "'" + pokemon.username + "'" : null},
+                        ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
                         ${pokemon.capture3 || null}
@@ -1403,8 +1402,8 @@ class RouteController {
                         '${pokestop.id}',
                         ${pokestop.lat},
                         ${pokestop.lon},
-                        ${pokestop.name ? "'" + pokestop.name + "'" : null},
-                        ${pokestop.url ? "'" + pokestop.url + "'" : null},
+                        ${pokestop.name ? '\'' + pokestop.name + '\'' : null},
+                        ${pokestop.url ? '\'' + pokestop.url + '\'' : null},
                         ${pokestop.lureExpireTimestamp},
                         ${pokestop.lastModifiedTimestamp},
                         ${pokestop.updated},
