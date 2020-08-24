@@ -650,8 +650,13 @@ class RouteController {
                 capture_2=VALUES(capture_2),
                 capture_3=VALUES(capture_3)
                 `;
-                let result = await db.query(sqlUpdate);
-                //console.log('Result:', result);
+                try {
+                    let result = await db.query(sqlUpdate);
+                    //console.log('Result:', result);
+                } catch (err) {
+                    console.error('[Wild] Error:', err);
+                    console.error('[Wild] sql:', sqlUpdate);
+                }
             }
         }
         if (nearbyPokemon.length > 0) {
@@ -1131,21 +1136,27 @@ class RouteController {
                     }
                     if (info.name) {
                         url = info.url
-                    }            
-                    gymInfosSQL.push(`('${name}', '${url}')`);
+                    }
+                    let id = info.gym_status_and_defenders.pokemon_fort_proto.id;
+                    let lat = info.gym_status_and_defenders.pokemon_fort_proto.latitude;
+                    let lon = info.gym_status_and_defenders.pokemon_fort_proto.longitude;
+                    gymInfosSQL.push(`('${id}', ${lat}, ${lon}, '${name}', '${url}', UNIX_TIMESTAMP(), UNIX_TIMESTAMP())`);
                 } catch (err) {
                     console.error('[GymInfos] Error:', err);
                 }
             }
-            let sqlUpdate = 'INSERT INTO gym (name, url) VALUES';
+            let sqlUpdate = 'INSERT INTO gym (id, lat, lon, name, url, updated, first_seen_timestamp) VALUES';
             sqlUpdate += gymInfosSQL.join(',');
             sqlUpdate += ` 
             ON DUPLICATE KEY UPDATE
+            lat=VALUES(lat),
+            lon=VALUES(lon),
             name=VALUES(name),
-            url=VALUES(url)
+            url=VALUES(url),
+            updated=VALUES(updated),
+            updated=VALUES(first_seen_timestamp)
             `;
-            // TODO: Get gym id
-            //let result = await db.query(sqlUpdate);
+            let result = await db.query(sqlUpdate);
             //console.log('Result:', result);
         }
     }
