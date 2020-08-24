@@ -1,0 +1,31 @@
+{
+  "name": "dataparser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "import": "node src/import.js",
+    "test": "npx eslint src/**/*.js",
+    "test-fix": "npx eslint src/**/*.js --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/versx/DataParser.git"
+  },
+  "author": "versx",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/versx/DataParser/issues"
+  },
+  "homepage": "https://github.com/versx/DataParser#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "google-protobuf": "^3.13.0",
+    "moment": "^2.27.0",
+    "mysql": "^2.18.1",
+    "nodes2ts": "^2.0.0",
+    "pogo-protos": "file:pogo-protos",
+    "s2-geometry": "^1.2.10"
+  }
+}

@@ -1,0 +1,4 @@
+[submodule "pogo-protos"]
+	branch = 181.0
+	path = pogo-protos
+	url = https://github.com/furtif/pogo-protos
