@@ -288,10 +288,10 @@ class RouteController {
         }
         const responseData = {
             'nearby': nearbyPokemons.length,
-            'wild': wildPokemons.count,
-            'forts': forts.count,
-            'quests': quests.count,
-            'encounters': encounters.count,
+            'wild': wildPokemons.length,
+            'forts': forts.length,
+            'quests': quests.length,
+            'encounters': encounters.length,
             'level': trainerLevel,
             'only_empty_gmos': containsGMO && isEmptyGMO,
             'only_invalid_gmos': containsGMO && isInvalidGMO,
