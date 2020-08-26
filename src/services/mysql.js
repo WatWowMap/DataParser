@@ -1,33 +1,36 @@
 'use strict';
 
 const mysql = require('mysql');
+const config = require('../config.json');
 
-const getConnection = (config) => {
-    const conn = mysql.createConnection({
-        host: config.host,
-        port: config.port,
-        user: config.username,
-        password: config.password,
-        database: config.database,
-        charset: config.charset,
-        supportBigNumbers: true
-    });
-    
-    conn.connect((err) => {
-        if (err) {
-            console.error('Failed to connect to the database:', config.db);
-            return;
-        }
-    });
-    
-    conn.on('error', (err) => {
-        console.error(`Mysql error: ${err}`);
-    });
-    return conn;
-};
+const pool  = mysql.createPool({
+    connectionLimit  : 10,
+    host             : config.db.host,
+    port             : config.db.port,
+    user             : config.db.username,
+    password         : config.db.password,
+    database         : config.db.database,
+    charset          : config.db.charset,
+    supportBigNumbers: true,
+    connectionLimit  : 1000,
+    //connectTimeout   : 15 * 1000,
+    //acquireTimeout   : 15 * 1000,
+    //timeout          : 15 * 1000
+});
+
+//pool.on('acquire', (connection) => {
+//    console.log('[MySQL] Connection %d acquired', connection.threadId);
+//});
+
+pool.on('enqueue', () => {
+    console.log('[MySQL] Waiting for available connection slot');
+});
+
+//pool.on('release', (connection) => {
+//    console.log('[MySQL] Connection %d released', connection.threadId);
+//});
 
 class MySQLConnector {
-    config;
 
     constructor(config) {
         this.config = config;
@@ -35,23 +38,21 @@ class MySQLConnector {
 
     async query(sql, args) {
         return new Promise((resolve, reject) => {
-            // The Promise constructor should catch any errors thrown on
-            // this tick. Alternately, try/catch and reject(err) on catch.
-            const conn = getConnection(this.config);
-            /* eslint-disable no-unused-vars */
-            conn.query(sql, args, (err, rows, fields) => {
-            /* eslint-enable no-unused-vars */
-                // Call reject on error states,
-                // call resolve with results
+            pool.getConnection((err, connection) => {
                 if (err) {
+                    // Not connected
                     return reject(err);
                 }
-                resolve(rows);
-                conn.end((err, args) => {
-                    if (err) {
-                        console.error(`Failed to close mysql connection: ${args}`);
-                        return;
+          
+                // Use the connection
+                connection.query(sql, args, (error, results, fields) => {
+                    // When done with the connection, release it
+                    connection.release();
+                    // Handle error after the release
+                    if (error) {
+                        return reject(error);
                     }
+                    resolve(results);
                 });
             });
         });

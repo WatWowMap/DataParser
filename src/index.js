@@ -1,21 +1,36 @@
 'use strict';
 
+const cluster = require('cluster');
 const express = require('express');
 const app = express();
 
 const config = require('./config.json');
+const instances = config.clusters || 4;
 
-const RouteController = require('./routes/index.js');
-const routes = new RouteController();
+// TODO: Webhooks
+// TODO: Add raw proto to redis
+// TODO: Loop redis insert into mysql
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+if (cluster.isMaster) {
+    console.log(`[Cluster] Master ${process.pid} is running`);
+  
+    // Fork workers
+    for (let i = 0; i < instances; i++) {
+      cluster.fork();
+    }
+  
+    cluster.on('exit', (worker, code, signal) => {
+        console.log(`[Cluster] Worker ${worker.process.pid} died`);
+    });
+} else {
+    const RouteController = require('./routes/index.js');
+    const routes = new RouteController();
 
-app.get('/', (req, res) => {
-    res.send('OK');
-});
+    app.use(express.json({ limit: '50mb' }));
 
-app.post('/raw', async (req, res) => await routes.handleRawData(req, res));
-app.post('/controler', async (req, res) => await routes.handleControllerData(req, res));
+    app.get('/', (req, res) => res.send('OK'));
+    app.post('/raw', async (req, res) => await routes.handleRawData(req, res));
+    app.post('/controler', async (req, res) => await routes.handleControllerData(req, res));
 
-app.listen(config.port, config.host, () => console.log(`Listening on ${config.host}:${config.port}...`));
+    app.listen(config.port, config.host, () => console.log(`Listening on ${config.host}:${config.port}...`));
+}

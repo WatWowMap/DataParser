@@ -17,11 +17,13 @@ const { sendResponse, base64_decode } = require('../services/utils.js');
 const MySQLConnector = require('../services/mysql.js');
 const db = new MySQLConnector(config.db);
 
-const emptyCells = [];
-const levelCache = {};
-
 class RouteController {
+
     constructor() {
+        this.emptyCells = [];
+        this.levelCache = {};
+        this.gymIdsPerCell = {};
+        this.stopsIdsPerCell = {};
     }
 
     /**
@@ -33,8 +35,7 @@ class RouteController {
         let payload = req.body;
         let type = payload['type'];
         let uuid = payload['uuid'];
-        if (type === undefined || type === null ||
-            uuid === undefined || uuid === null) {
+        if (!type || !uuid) {
             console.error('[Controller] Failed to parse controller data');
             return res.sendStatus(400);
         }
@@ -162,17 +163,16 @@ class RouteController {
     async handleAccount(req, res, device, minLevel, maxLevel) {
         let account = await Account.getNewAccount(minLevel, maxLevel, true);
         console.log('[Controller] GetNewAccount:', account);
-        if (device === undefined || device === null || 
-            account === undefined || account === null) {
+        if (!device || !account) {
             if (device.accountUsername) {
                 account = await Account.getWithUsername(device.accountUsername, true);
                 console.log('[Controller] GetOldAccount:', account);
                 if (account instanceof Account && 
                     account.level >= minLevel &&
                     account.level <= maxLevel &&
-                    account.firstWarningTimestamp === undefined && 
-                    account.failed                === undefined && 
-                    account.failedTimestamp       === undefined) {
+                    !account.firstWarningTimestamp && 
+                    !account.failed && 
+                    !account.failedTimestamp) {
                     sendResponse(res, 'ok', {
                         username: oldAccount.username.trim(),
                         password: oldAccount.password.trim(),
@@ -204,30 +204,27 @@ class RouteController {
         if (account instanceof Account) {
             switch (type) {
                 case 'account_banned':
-                    if (account.failedTimestamp === undefined || account.failedTimestamp === null || 
-                        account.failed === undefined || account.failed === null) {
-                            account.failedTimestamp = ts;
-                            account.failed = 'banned';
+                    if (!account.failedTimestamp || !account.failed) {
+                        account.failedTimestamp = ts;
+                        account.failed = 'banned';
                     }
                     break;
                 case 'account_warning':
-                    if (account.firstWarningTimestamp === undefined || account.firstWarningTimestamp === null) {
+                    if (!account.firstWarningTimestamp) {
                         account.firstWarningTimestamp = ts;
                     }
                     break;
                 case 'account_invalid_credentials':
-                    if (account.failedTimestamp === undefined || account.failedTimestamp === null || 
-                        account.failed === undefined || account.failed === null) {
-                            account.failedTimestamp = ts;
-                            account.failed = 'invalid_credentials';
+                    if (!account.failedTimestamp || !account.failed) {
+                        account.failedTimestamp = ts;
+                        account.failed = 'invalid_credentials';
                     }
                     break;
             }
             await account.save(true);
             sendResponse(res, 'ok', null);
         } else {
-            if (device === undefined || device === null ||
-                account === undefined || account === null) {
+            if (!device || !account) {
                 console.error('[Controller] Failed to get account, device or account is null.');
                 return res.sendStatus(400);
             }
@@ -260,7 +257,7 @@ class RouteController {
      */
     async handleRawData(req, res) {
         let json = req.body;
-        if (json === undefined || json === null) {
+        if (!json) {
             console.error('[Raw] Bad data');
             return res.sendStatus(400);
         }
@@ -271,14 +268,14 @@ class RouteController {
         let trainerLevel = parseInt(json['trainerlvl'] || json['trainerLevel']) || 0;
         let username = json['username'];
         if (username && trainerLevel > 0) {
-            let oldLevel = levelCache[username];
+            let oldLevel = this.levelCache[username];
             if (oldLevel !== trainerLevel) {
                 await Account.setLevel(username, trainerLevel);
-                levelCache[username] = trainerLevel;
+                this.levelCache[username] = trainerLevel;
             }
         }
         let contents = json['contents'] || json['protos'] || json['gmo'];
-        if (contents === undefined || contents === null) {
+        if (!contents) {
             console.error('[Raw] Invalid GMO');
             return res.sendStatus(400);
         }
@@ -327,6 +324,7 @@ class RouteController {
     
             switch (method) {
                 case 2: // GetPlayerResponse
+                    /*
                     try {
                         let gpr = POGOProtos.Networking.Responses.GetPlayerResponse.decode(base64_decode(data));
                         if (gpr) {
@@ -341,6 +339,7 @@ class RouteController {
                     } catch (err) {
                         console.error('[Raw] Unable to decode GetPlayerResponse');
                     }
+                    */
                     break;
                 case 4: // GetHoloInventoryResponse
                     // TODO: Parse GetHoloInventoryResponse
@@ -394,10 +393,10 @@ class RouteController {
                             isInvalidGMO = false;
                             let mapCellsNew = gmo.map_cells;
                             if (mapCellsNew.length === 0) {
-                                console.debug('[Raw] Map cells is empty');
+                                console.debug('[Raw] Map cells are empty');
                                 return res.sendStatus(400);
                             }
-                            mapCellsNew.forEach((mapCell) => {
+                            mapCellsNew.forEach(mapCell => {
                                 let timestampMs = mapCell.current_timestamp_ms;
                                 let wildNew = mapCell.wild_pokemons;
                                 wildNew.forEach((wildPokemon) => {
@@ -408,14 +407,14 @@ class RouteController {
                                     });
                                 });
                                 let nearbyNew = mapCell.nearby_pokemons;
-                                nearbyNew.forEach((nearbyPokemon) => {
+                                nearbyNew.forEach(nearbyPokemon => {
                                     nearbyPokemons.push({
                                         cell: mapCell.s2_cell_id,
                                         data: nearbyPokemon
                                     });
                                 });
                                 let fortsNew = mapCell.forts;
-                                fortsNew.forEach((fort) => {
+                                fortsNew.forEach(fort => {
                                     forts.push({
                                         cell: mapCell.s2_cell_id,
                                         data: fort
@@ -425,7 +424,7 @@ class RouteController {
                             });
             
                             let weather = gmo.client_weather;
-                            weather.forEach((wmapCell) => {
+                            weather.forEach(wmapCell => {
                                 clientWeathers.push({
                                     cell: wmapCell.s2_cell_id,
                                     data: wmapCell
@@ -433,12 +432,12 @@ class RouteController {
                             });
             
                             if (wildPokemons.length === 0 && nearbyPokemons.length === 0 && forts.length === 0) {
-                                cells.forEach((cell) => {
-                                    let count = emptyCells[cell];
-                                    if (count === undefined) {
-                                        emptyCells[cell] = 1;
+                                cells.forEach(cell => {
+                                    let count = this.emptyCells[cell];
+                                    if (!count) {
+                                        this.emptyCells[cell] = 1;
                                     } else {
-                                        emptyCells[cell] = count + 1;
+                                        this.emptyCells[cell] = count + 1;
                                     }
                                     if (count === 3) {
                                         console.debug('[Raw] Cell', cell, 'was empty 3 times in a row. Assuming empty.');
@@ -448,7 +447,7 @@ class RouteController {
                                 
                                 console.debug('[Raw] GMO is empty.');
                             } else {
-                                cells.forEach(cell => emptyCells[cell] = 0);
+                                cells.forEach(cell => this.emptyCells[cell] = 0);
                                 isEmptyGMO = false;
                             }
                         } else {
@@ -545,7 +544,7 @@ class RouteController {
                     });
                     await this.updatePokemonValues(pokemon);
         
-                    if (pokemon.lat === undefined && pokemon.pokestopId) {
+                    if (!pokemon.lat && pokemon.pokestopId) {
                         if (pokemon.pokestopId) {
                             let pokestop;
                             try {
@@ -673,7 +672,7 @@ class RouteController {
                     });
                     await this.updatePokemonValues(pokemon);
         
-                    if ((pokemon.lat === undefined || pokemon.lat === null) && pokemon.pokestopId) {
+                    if (!pokemon.lat && pokemon.pokestopId) {
                         if (pokemon.pokestopId) {
                             let pokestop;
                             try {
@@ -691,7 +690,7 @@ class RouteController {
                             continue;
                         }
                     }
-                    if (pokemon.lat === undefined || pokemon.lat === null) {
+                    if (!pokemon.lat) {
                         continue;
                     }
                     pokemon.changed = ts;
@@ -797,14 +796,14 @@ class RouteController {
         } catch (err) {
             oldPokemon = null;
         }
-        if (oldPokemon === undefined || oldPokemon === null) {
-            if (pokemon.expireTimestamp === undefined || pokemon.expireTimestamp === null) {
+        if (!oldPokemon) {
+            if (!pokemon.expireTimestamp) {
                 pokemon.expireTimestamp = now + Pokemon.PokemonTimeUnseen;
             }
             pokemon.firstSeenTimestamp = pokemon.updated;
         } else {
             pokemon.firstSeenTimestamp = oldPokemon.firstSeenTimestamp;
-            if (pokemon.expireTimestamp === undefined || pokemon.expireTimestamp === null) {
+            if (!pokemon.expireTimestamp) {
                 let oldExpireDate = oldPokemon.expireTimestamp;
                 if ((oldExpireDate - now) < Pokemon.PokemonTimeReseen) {
                     pokemon.expireTimestamp = now + Pokemon.PokemonTimeReseen;
@@ -812,7 +811,7 @@ class RouteController {
                     pokemon.expireTimestamp = oldPokemon.expireTimestamp;
                 }
             }
-            if (pokemon.expireTimestampVerified === false && oldPokemon.expireTimestampVerified) {
+            if (!pokemon.expireTimestampVerified && oldPokemon.expireTimestampVerified) {
                 pokemon.expireTimestampVerified = oldPokemon.expireTimestampVerified;
                 pokemon.expireTimestamp = oldPokemon.expireTimestamp;
             }
@@ -823,19 +822,22 @@ class RouteController {
                     console.log('[POKEMON] Pokemon', pokemon.id, 'Ditto diguised as', (oldPokemon.displayPokemonId || 0), 'now seen as', pokemon.pokemonId);
                 }
             }
-            if (oldPokemon.cellId && (pokemon.cellId === undefined || pokemon.cellId === null)) {
+            // Check if old pokemon cell_id is set and new pokemon cell_id is not
+            if (oldPokemon.cellId && !pokemon.cellId) {
                 pokemon.cellId = oldPokemon.cellId;
             }
-            if (oldPokemon.spawnId && (pokemon.spawnId === undefined || pokemon.spawnId == null)) {
+            // Check if old pokemon spawn_id is set and new pokemon spawn_id is not
+            if (oldPokemon.spawnId && !pokemon.spawnId) {
                 pokemon.spawnId = oldPokemon.spawnId;
                 pokemon.lat = oldPokemon.lat;
                 pokemon.lon = oldPokemon.lon;
             }
-            if (oldPokemon.pokestopId && (pokemon.pokestopId === undefined || pokemon.pokestopId == null)) {
+            // Check if old pokemon pokestop_id is set and new pokemon pokestop_id is not
+            if (oldPokemon.pokestopId && !pokemon.pokestopId) {
                 pokemon.pokestopId = oldPokemon.pokestopId;
             }
-
-            if (updateIV && (oldPokemon.atkIv === undefined || oldPokemon.atkIv === null) && pokemon.atkIv) {
+            // Check if we need to update IV and old pokemon atk_id is not set and new pokemon atk_id is set
+            if (updateIV && !oldPokemon.atkIv && pokemon.atkIv) {
                 //WebhookController.instance.addPokemonEvent(this);
                 //InstanceController.instance.gotIV(this);
                 pokemon.changed = now;
@@ -843,10 +845,12 @@ class RouteController {
                 pokemon.changed = oldPokemon.changed || now;
             }
 
-            if (updateIV && oldPokemon.atkIv && (pokemon.atkIv === undefined || pokemon.atkIv === null)) {
+            // Check if old pokemon cell_id is set and new pokemon cell_id is not
+            if (updateIV && oldPokemon.atkIv && !pokemon.atkIv) {
+                // Weather or spawn change
                 if (
-                    !(((oldPokemon.weather === undefined || oldPokemon.weather === null) || oldPokemon.weather === 0) && (pokemon.weather || 0 > 0) ||
-                        ((pokemon.weather === undefined || pokemon.weather === null) || pokemon.weather === 0) && (oldPokemon.weather || 0 > 0))
+                    !((!oldPokemon.weather || oldPokemon.weather === 0) && (pokemon.weather || 0 > 0) ||
+                        (!pokemon.weather || pokemon.weather === 0) && (oldPokemon.weather || 0 > 0))
                 ) {
                     pokemon.atkIv = oldPokemon.atkIv;
                     pokemon.defIv = oldPokemon.defIv;
@@ -878,28 +882,21 @@ class RouteController {
 
         if (pokemon.spawnId) {
             let spawnpoint;
+            let secondOfHour = null;
             if (pokemon.expireTimestampVerified && pokemon.expireTimestamp) {
                 let date = moment(pokemon.expireTimestamp).format('mm:ss');
                 let split = date.split(':');
                 let minute = parseInt(split[0]);
                 let second = parseInt(split[1]);
-                let secondOfHour = second + minute * 60;
-                spawnpoint = new Spawnpoint(
-                    pokemon.spawnId,
-                    pokemon.lat,
-                    pokemon.lon,
-                    secondOfHour,
-                    pokemon.updated
-                );
-            } else {
-                spawnpoint = new Spawnpoint(
-                    pokemon.spawnId,
-                    pokemon.lat,
-                    pokemon.lon,
-                    null,
-                    pokemon.updated
-                );
+                secondOfHour = second + minute * 60;
             }
+            spawnpoint = new Spawnpoint(
+                pokemon.spawnId,
+                pokemon.lat,
+                pokemon.lon,
+                secondOfHour,
+                pokemon.updated
+            );
             try {
                 await spawnpoint.save(true);
             } catch (err) {
@@ -954,10 +951,10 @@ class RouteController {
                                 ${gym.sponsorId}
                             )
                             `);
-                            //if (this.gymIdsPerCell[fort.cell] === undefined) {
-                            //    this.gymIdsPerCell[fort.cell] = [];
-                            //}
-                            //this.gymIdsPerCell[fort.cell.toString()].push(fort.data.id.toString());
+                            if (!this.gymIdsPerCell[fort.cell]) {
+                                this.gymIdsPerCell[fort.cell] = [];
+                            }
+                            this.gymIdsPerCell[fort.cell.toString()].push(fort.data.id.toString());
                             break;
                         case 1: // checkpoint
                             let pokestop = new Pokestop({
@@ -990,10 +987,10 @@ class RouteController {
                                 ${pokestop.gruntType},
                                 ${pokestop.sponsorId}
                             )`);
-                            //if (this.stopsIdsPerCell[fort.cell] === undefined) {
-                            //    this.stopsIdsPerCell[fort.cell] = [];
-                            //}
-                            //this.stopsIdsPerCell[fort.cell.toString()].push(fort.data.id.toString());
+                            if (!this.stopsIdsPerCell[fort.cell]) {
+                                this.stopsIdsPerCell[fort.cell] = [];
+                            }
+                            this.stopsIdsPerCell[fort.cell.toString()].push(fort.data.id.toString());
                             break;
                     }
                 } catch (err) {
@@ -1179,12 +1176,12 @@ class RouteController {
                     console.error('[Cell] Error:', err);
                 }
                
-                //if (this.gymIdsPerCell[cellId] === undefined) {
-                //    this.gymIdsPerCell[cellId] = [];
-                //}
-                //if (this.stopsIdsPerCell[cellId] === undefined) {
-                //    this.stopsIdsPerCell[cellId] = [];
-                //} 
+                if (!this.gymIdsPerCell[cellId]) {
+                    this.gymIdsPerCell[cellId] = [];
+                }
+                if (!this.stopsIdsPerCell[cellId]) {
+                    this.stopsIdsPerCell[cellId] = [];
+                } 
             }
             let sqlUpdate = 'INSERT INTO s2cell (id, level, center_lat, center_lon, updated) VALUES';
             sqlUpdate += cellsSQL.join(',');
@@ -1410,7 +1407,7 @@ class RouteController {
                     }
                     questsSQL.push(`
                     (
-                        '${pokestop.id}',
+                        '${quest.fort_id}',
                         ${pokestop.lat},
                         ${pokestop.lon},
                         ${pokestop.name ? '\'' + pokestop.name + '\'' : null},
@@ -1443,7 +1440,7 @@ class RouteController {
                 quest_timestamp, quest_target, quest_conditions, quest_rewards, quest_template,  cell_id, deleted, lure_id, pokestop_display, incident_expire_timestamp,
                 first_seen_timestamp, grunt_type, sponsor_id) VALUES
             `;
-            sqlUpdate += pokestopsSQL.join(',');
+            sqlUpdate += questsSQL.join(',');
             //console.log('sql:', sqlUpdate);
             sqlUpdate += ` 
             ON DUPLICATE KEY UPDATE
