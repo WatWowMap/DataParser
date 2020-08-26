@@ -26,7 +26,6 @@ CREATE TABLE `account` (
   `last_encounter_time` int(11) unsigned DEFAULT NULL,
   `spins` smallint(6) unsigned NOT NULL DEFAULT 0,
   `tutorial` tinyint(3) unsigned NOT NULL DEFAULT 0,
-  `ptcToken` text DEFAULT NULL,
   `last_uuid` varchar(40) DEFAULT NULL,
   `last_instance` varchar(30) DEFAULT NULL,
   `creation_timestamp_ms` int(11) unsigned DEFAULT NULL,
@@ -51,15 +50,12 @@ CREATE TABLE IF NOT EXISTS `device` (
   `last_host` varchar(30) DEFAULT NULL,
   `last_seen` int(11) unsigned NOT NULL DEFAULT 0,
   `account_username` varchar(32) DEFAULT NULL,
-  `device_group` varchar(30) DEFAULT NULL,
   `last_lat` double DEFAULT 0,
   `last_lon` double DEFAULT 0,
-  `device_level` tinyint(3) unsigned DEFAULT 0,
   PRIMARY KEY (`uuid`),
   UNIQUE KEY `uk_iaccount_username` (`account_username`),
   KEY `fk_instance_name` (`instance_name`),
-  CONSTRAINT `fk_account_username` FOREIGN KEY (`account_username`) REFERENCES `account` (`username`) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `fk_instance_name` FOREIGN KEY (`instance_name`) REFERENCES `instance` (`name`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `fk_account_username` FOREIGN KEY (`account_username`) REFERENCES `account` (`username`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 --
@@ -129,6 +125,7 @@ CREATE TABLE IF NOT EXISTS `gym` (
   `first_seen_timestamp` int(11) unsigned NOT NULL,
   `raid_pokemon_gender` tinyint(3) unsigned DEFAULT NULL,
   `sponsor_id` smallint(5) unsigned DEFAULT NULL,
+  `raid_pokemon_costume` smallint(4) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `ix_coords` (`lat`,`lon`),
   KEY `ix_raid_end_timestamp` (`raid_end_timestamp`),
