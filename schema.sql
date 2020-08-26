@@ -63,6 +63,38 @@ CREATE TABLE IF NOT EXISTS `device` (
 );
 
 --
+-- Table structure for table `s2cell`
+--
+
+DROP TABLE IF EXISTS `s2cell`;
+CREATE TABLE IF NOT EXISTS `s2cell` (
+  `id` bigint(20) unsigned NOT NULL,
+  `level` tinyint(3) unsigned DEFAULT NULL,
+  `center_lat` double(18,14) NOT NULL DEFAULT 0.00000000000000,
+  `center_lon` double(18,14) NOT NULL DEFAULT 0.00000000000000,
+  `updated` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ix_coords` (`center_lat`,`center_lon`),
+  KEY `ix_updated` (`updated`)
+);
+
+--
+-- Table structure for table `spawnpoint`
+--
+
+DROP TABLE IF EXISTS `spawnpoint`;
+CREATE TABLE IF NOT EXISTS `spawnpoint` (
+  `id` bigint(15) unsigned NOT NULL,
+  `lat` double(18,14) NOT NULL,
+  `lon` double(18,14) NOT NULL,
+  `updated` int(11) unsigned NOT NULL DEFAULT 0,
+  `despawn_sec` smallint(6) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ix_coords` (`lat`,`lon`),
+  KEY `ix_updated` (`updated`)
+);
+
+--
 -- Table structure for table `gym`
 --
 
@@ -105,6 +137,51 @@ CREATE TABLE IF NOT EXISTS `gym` (
   KEY `fk_gym_cell_id` (`cell_id`),
   KEY `ix_gym_deleted` (`deleted`),
   CONSTRAINT `fk_gym_cell_id` FOREIGN KEY (`cell_id`) REFERENCES `s2cell` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+--
+-- Table structure for table `pokestop`
+--
+
+DROP TABLE IF EXISTS `pokestop`;
+CREATE TABLE IF NOT EXISTS `pokestop` (
+  `id` varchar(35) NOT NULL,
+  `lat` double(18,14) NOT NULL,
+  `lon` double(18,14) NOT NULL,
+  `name` varchar(128) DEFAULT NULL,
+  `url` varchar(200) DEFAULT NULL,
+  `lure_expire_timestamp` int(11) unsigned DEFAULT NULL,
+  `last_modified_timestamp` int(11) unsigned DEFAULT NULL,
+  `updated` int(11) unsigned NOT NULL,
+  `enabled` tinyint(1) unsigned DEFAULT NULL,
+  `quest_type` int(11) unsigned DEFAULT NULL,
+  `quest_timestamp` int(11) unsigned DEFAULT NULL,
+  `quest_target` smallint(6) unsigned DEFAULT NULL,
+  `quest_conditions` text DEFAULT NULL,
+  `quest_rewards` text DEFAULT NULL,
+  `quest_template` varchar(100) DEFAULT NULL,
+  `quest_pokemon_id` smallint(6) unsigned GENERATED ALWAYS AS (json_extract(json_extract(`quest_rewards`,_utf8mb4'$[*].info.pokemon_id'),_utf8mb4'$[0]')) VIRTUAL,
+  `quest_reward_type` smallint(6) unsigned GENERATED ALWAYS AS (json_extract(json_extract(`quest_rewards`,_utf8mb4'$[*].type'),_utf8mb4'$[0]')) VIRTUAL,
+  `quest_item_id` smallint(6) unsigned GENERATED ALWAYS AS (json_extract(json_extract(`quest_rewards`,_utf8mb4'$[*].info.item_id'),_utf8mb4'$[0]')) VIRTUAL,
+  `cell_id` bigint(20) unsigned DEFAULT NULL,
+  `deleted` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `lure_id` smallint(5) DEFAULT 0,
+  `pokestop_display` smallint(5) DEFAULT 0,
+  `incident_expire_timestamp` int(11) unsigned DEFAULT NULL,
+  `first_seen_timestamp` int(11) unsigned NOT NULL,
+  `grunt_type` smallint(5) unsigned DEFAULT 0,
+  `sponsor_id` smallint(5) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ix_coords` (`lat`,`lon`),
+  KEY `ix_lure_expire_timestamp` (`lure_expire_timestamp`),
+  KEY `ix_updated` (`updated`),
+  KEY `fk_pokestop_cell_id` (`cell_id`),
+  KEY `ix_pokestop_deleted` (`deleted`),
+  KEY `ix_quest_pokemon_id` (`quest_pokemon_id`),
+  KEY `ix_quest_reward_type` (`quest_reward_type`),
+  KEY `ix_quest_item_id` (`quest_item_id`),
+  KEY `ix_incident_expire_timestamp` (`incident_expire_timestamp`),
+  CONSTRAINT `fk_pokestop_cell_id` FOREIGN KEY (`cell_id`) REFERENCES `s2cell` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 --
@@ -163,83 +240,6 @@ CREATE TABLE IF NOT EXISTS `pokemon` (
   CONSTRAINT `fk_pokemon_cell_id` FOREIGN KEY (`cell_id`) REFERENCES `s2cell` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_pokestop_id` FOREIGN KEY (`pokestop_id`) REFERENCES `pokestop` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_spawn_id` FOREIGN KEY (`spawn_id`) REFERENCES `spawnpoint` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-);
-
---
--- Table structure for table `s2cell`
---
-
-DROP TABLE IF EXISTS `s2cell`;
-CREATE TABLE IF NOT EXISTS `s2cell` (
-  `id` bigint(20) unsigned NOT NULL,
-  `level` tinyint(3) unsigned DEFAULT NULL,
-  `center_lat` double(18,14) NOT NULL DEFAULT 0.00000000000000,
-  `center_lon` double(18,14) NOT NULL DEFAULT 0.00000000000000,
-  `updated` int(11) unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `ix_coords` (`center_lat`,`center_lon`),
-  KEY `ix_updated` (`updated`)
-);
-
---
--- Table structure for table `pokestop`
---
-
-DROP TABLE IF EXISTS `pokestop`;
-CREATE TABLE IF NOT EXISTS `pokestop` (
-  `id` varchar(35) NOT NULL,
-  `lat` double(18,14) NOT NULL,
-  `lon` double(18,14) NOT NULL,
-  `name` varchar(128) DEFAULT NULL,
-  `url` varchar(200) DEFAULT NULL,
-  `lure_expire_timestamp` int(11) unsigned DEFAULT NULL,
-  `last_modified_timestamp` int(11) unsigned DEFAULT NULL,
-  `updated` int(11) unsigned NOT NULL,
-  `enabled` tinyint(1) unsigned DEFAULT NULL,
-  `quest_type` int(11) unsigned DEFAULT NULL,
-  `quest_timestamp` int(11) unsigned DEFAULT NULL,
-  `quest_target` smallint(6) unsigned DEFAULT NULL,
-  `quest_conditions` text DEFAULT NULL,
-  `quest_rewards` text DEFAULT NULL,
-  `quest_template` varchar(100) DEFAULT NULL,
-  `quest_pokemon_id` smallint(6) unsigned GENERATED ALWAYS AS (json_extract(json_extract(`quest_rewards`,_utf8mb4'$[*].info.pokemon_id'),_utf8mb4'$[0]')) VIRTUAL,
-  `quest_reward_type` smallint(6) unsigned GENERATED ALWAYS AS (json_extract(json_extract(`quest_rewards`,_utf8mb4'$[*].type'),_utf8mb4'$[0]')) VIRTUAL,
-  `quest_item_id` smallint(6) unsigned GENERATED ALWAYS AS (json_extract(json_extract(`quest_rewards`,_utf8mb4'$[*].info.item_id'),_utf8mb4'$[0]')) VIRTUAL,
-  `cell_id` bigint(20) unsigned DEFAULT NULL,
-  `deleted` tinyint(1) unsigned NOT NULL DEFAULT 0,
-  `lure_id` smallint(5) DEFAULT 0,
-  `pokestop_display` smallint(5) DEFAULT 0,
-  `incident_expire_timestamp` int(11) unsigned DEFAULT NULL,
-  `first_seen_timestamp` int(11) unsigned NOT NULL,
-  `grunt_type` smallint(5) unsigned DEFAULT 0,
-  `sponsor_id` smallint(5) unsigned DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `ix_coords` (`lat`,`lon`),
-  KEY `ix_lure_expire_timestamp` (`lure_expire_timestamp`),
-  KEY `ix_updated` (`updated`),
-  KEY `fk_pokestop_cell_id` (`cell_id`),
-  KEY `ix_pokestop_deleted` (`deleted`),
-  KEY `ix_quest_pokemon_id` (`quest_pokemon_id`),
-  KEY `ix_quest_reward_type` (`quest_reward_type`),
-  KEY `ix_quest_item_id` (`quest_item_id`),
-  KEY `ix_incident_expire_timestamp` (`incident_expire_timestamp`),
-  CONSTRAINT `fk_pokestop_cell_id` FOREIGN KEY (`cell_id`) REFERENCES `s2cell` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
---
--- Table structure for table `spawnpoint`
---
-
-DROP TABLE IF EXISTS `spawnpoint`;
-CREATE TABLE IF NOT EXISTS `spawnpoint` (
-  `id` bigint(15) unsigned NOT NULL,
-  `lat` double(18,14) NOT NULL,
-  `lon` double(18,14) NOT NULL,
-  `updated` int(11) unsigned NOT NULL DEFAULT 0,
-  `despawn_sec` smallint(6) unsigned DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `ix_coords` (`lat`,`lon`),
-  KEY `ix_updated` (`updated`)
 );
 
 --
