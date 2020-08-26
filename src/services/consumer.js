@@ -37,22 +37,20 @@ class Consumer {
                     await this.updatePokemonValues(pokemon);
         
                     if (!pokemon.lat && pokemon.pokestopId) {
-                        if (pokemon.pokestopId) {
-                            let pokestop;
-                            try {
-                                pokestop = await Pokestop.getById(pokemon.pokestopId);
-                            } catch (err) {
-                                console.error('[Pokemon] Error:', err);
-                            }
-                            if (pokestop) {
-                                pokemon.lat = pokestop.lat;
-                                pokemon.lon = pokestop.lon;
-                            } else {
-                                return;
-                            }
-                        } else {
-                            return;
+                        if (!pokemon.pokestopId) {
+                            continue;
                         }
+                        let pokestop;
+                        try {
+                            pokestop = await Pokestop.getById(pokemon.pokestopId);
+                        } catch (err) {
+                            console.error('[Pokemon] Error:', err);
+                        }
+                        if (!pokestop) {
+                            continue;
+                        }
+                        pokemon.lat = pokestop.lat;
+                        pokemon.lon = pokestop.lon;
                     }
                     pokemon.changed = ts;
                     if (!pokemon.firstSeenTimestamp) {
@@ -165,22 +163,20 @@ class Consumer {
                     await this.updatePokemonValues(pokemon);
         
                     if (!pokemon.lat && pokemon.pokestopId) {
-                        if (pokemon.pokestopId) {
-                            let pokestop;
-                            try {
-                                pokestop = await Pokestop.getById(pokemon.pokestopId);
-                            } catch (err) {
-                                console.error('[Pokemon] Error:', err);
-                            }
-                            if (pokestop) {
-                                pokemon.lat = pokestop.lat;
-                                pokemon.lon = pokestop.lon;
-                            } else {
-                                continue;
-                            }
-                        } else {
+                        if (!pokemon.pokestopId) {
                             continue;
                         }
+                        let pokestop;
+                        try {
+                            pokestop = await Pokestop.getById(pokemon.pokestopId);
+                        } catch (err) {
+                            console.error('[Pokemon] Error:', err);
+                        }
+                        if (!pokestop) {
+                            continue;
+                        }
+                        pokemon.lat = pokestop.lat;
+                        pokemon.lon = pokestop.lon;
                     }
                     if (!pokemon.lat) {
                         continue;
@@ -580,14 +576,8 @@ class Consumer {
             for (let i = 0; i < fortDetails.length; i++) {
                 let details = fortDetails[i];
                 try {
-                    let name = '';
-                    let url = '';
-                    if (details.image_urls.length > 0) {
-                        url = details.image_urls[0];
-                    }
-                    if (details.name) {
-                        name = details.name
-                    }
+                    let name = details.name ? details.name : '';
+                    let url = details.image_urls.length > 0 ? details.image_urls[0] : '';
                     let id = details.fort_id;
                     let lat = details.latitude;
                     let lon = details.longitude;
@@ -618,14 +608,8 @@ class Consumer {
             for (let i = 0; i < gymInfos.length; i++) {
                 let info = gymInfos[i];
                 try {
-                    let name = '';
-                    let url = '';
-                    if (info.name) {
-                        name = info.name;
-                    }
-                    if (info.name) {
-                        url = info.url
-                    }
+                    let name = info.name ? info.name : '';
+                    let url = info.url ? info.url : '';
                     let id = info.gym_status_and_defenders.pokemon_fort_proto.id;
                     let lat = info.gym_status_and_defenders.pokemon_fort_proto.latitude;
                     let lon = info.gym_status_and_defenders.pokemon_fort_proto.longitude;
