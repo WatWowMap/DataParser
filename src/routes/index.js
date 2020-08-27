@@ -282,7 +282,7 @@ class RouteController {
         }
 
         if (playerData.length > 0) {
-            console.log('PlayerData:', username, playerData);
+            await this.consumers[username].updatePlayerData(playerData);
         }
 
         let endTime = process.hrtime(startTime);
