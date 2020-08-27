@@ -350,6 +350,46 @@ class Pokemon {
             return despawn;
         }
     }
+
+    /**
+     * Get Pokemon object as JSON object with correct property keys for webhook payload
+     */
+    toJson() {
+        return {
+            type: 'pokemon',
+            message: {
+                spawnpoint_id: this.spawnId ? this.spawnId.toString(16) : 'None',
+                pokestop_id: this.pokestopId || 'None',
+                encounter_id: this.id,
+                pokemon_id: this.pokemonId,
+                latitude: this.lat,
+                longitude: this.lon,
+                disappear_time: this.expireTimestamp || 0,
+                disappear_time_verified: this.expireTimestampVerified,
+                first_seen: this.firstSeenTimestamp || 1,
+                last_modified_time: this.updated || 1,
+                gender: this.gender,
+                cp: this.cp,
+                form: this.form,
+                costume: this.costume,
+                individual_attack: this.atkIv,
+                individual_defense: this.defIv,
+                individual_stamina: this.staIv,
+                pokemon_level: this.level,
+                move_1: this.move1,
+                move_2: this.move2,
+                weight: this.weight,
+                height: this.size,
+                weather: this.weather,
+                shiny: this.shiny,
+                username: this.username,
+                display_pokemon_id: this.displayPokemonId,
+                capture_1: this.capture1,
+                capture_2: this.capture2,
+                capture_3: this.capture3
+            }
+        }
+    }
 }
 
 module.exports = Pokemon;

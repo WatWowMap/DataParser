@@ -5,9 +5,9 @@ const express = require('express');
 const app = express();
 
 const config = require('./config.json');
+const WebhookController = require('./services/webhook.js');
 const instances = config.clusters || 4;
 
-// TODO: Webhooks
 // TODO: Add raw proto to redis
 // TODO: Loop redis insert into mysql
 
@@ -28,8 +28,19 @@ if (cluster.isMaster) {
 
     app.use(express.json({ limit: '50mb' }));
 
+    app.post('/', (req, res) => {
+        const body = req.body;
+        console.log('[Webhook Test] Received', body.length, 'webhook payloads');
+        console.log('payload:', body);
+        res.send('OK');
+    });
+
     app.get('/', (req, res) => res.send('OK'));
     app.post('/raw', async (req, res) => await routes.handleRawData(req, res));
 
     app.listen(config.port, config.host, () => console.log(`Listening on ${config.host}:${config.port}...`));
+
+    if (config.webhooks.enabled && config.webhooks.urls.length > 0) {
+        WebhookController.instance.start();
+    }
 }

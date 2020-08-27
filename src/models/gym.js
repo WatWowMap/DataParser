@@ -1,6 +1,11 @@
 'use strict';
 
+const config = require('../config.json');
+const MySQLConnector = require('../services/mysql.js');
+const db = new MySQLConnector(config.db);
+
 class Gym {
+
     constructor(data) {
         if (data.fort) {
             this.id = data.fort.id;
@@ -94,6 +99,100 @@ class Gym {
             this.deleted = data.deleted || 0;
             this.firstSeenTimestamp = data.first_seen_timestamp;
             this.sponsorId = data.sponsor_id || null;
+        }
+    }
+
+    /**
+     * Get Gym by unique id
+     * @param {*} id 
+     * @param {*} withDeleted 
+     */
+    async getById(id, withDeleted = true) {
+        const withDeletedSQL = withDeleted ? '' : 'AND deleted = false';
+        const sql = `
+            SELECT id, lat, lon, name, url, guarding_pokemon_id, last_modified_timestamp, team_id, raid_end_timestamp,
+                   raid_spawn_timestamp, raid_battle_timestamp, raid_pokemon_id, enabled, availble_slots, updated,
+                   raid_level, ex_raid_eligible, in_battle, raid_pokemon_move_1, raid_pokemon_move_2, raid_pokemon_form,
+                   raid_pokemon_costume, raid_pokemon_cp, raid_pokemon_gender, raid_is_exclusive, cell_id, total_cp,
+                   sponsor_id
+            FROM gym
+            WHERE id = ? ${withDeletedSQL}
+        `;
+        const args = [id];
+        let results = await db.query(sql, args);
+        if (results && results > 0) {
+            const result = results[0];
+            return new Gym(result);
+        }
+        return null;
+    }
+
+    /**
+     * Get Gym object as JSON object with correct property keys for webhook payload
+     */
+    toJson(type) {
+        switch (type) {
+            case "gym":
+                return {
+                    type: "gym",
+                    message: {
+                        gym_id: this.id,
+                        gym_name: this.name || "Unknown",
+                        latitude: this.lat,
+                        longitude: this.lon,
+                        url: this.url || "",
+                        enabled: this.enabled || true,
+                        team_id: this.teamId || 0,
+                        last_modified: this.lastModifiedTimestamp || 0,
+                        guard_pokemon_id: this.guardPokemonId || 0,
+                        slots_available: this.availableSlots || 6,
+                        raid_active_until: this.raidEndTimestamp || 0,
+                        ex_raid_eligible: this.exRaidEligible || 0,
+                        sponsor_id: this.sponsorId || 0
+                    }
+                };
+            case "gym-info":
+                return {
+                    type: "gym_details",
+                    message: {
+                        id: this.id,
+                        name: this.name || "Unknown",
+                        url: this.url || "",
+                        latitude: this.lat,
+                        longitude: this.lon,
+                        team: this.teamId || 0,
+                        slots_available: this.availableSlots || 6,
+                        ex_raid_eligible: this.exRaidEligible || 0,
+                        in_battle: this.inBattle || false,
+                        sponsor_id: this.sponsorId || 0
+                    }
+                };
+            case "egg":
+            case "raid":
+                return {
+                    type: "raid",
+                    message: {
+                        gym_id: this.id,
+                        gym_name: this.name || "Unknown",
+                        gym_url: this.url || "",
+                        latitude: this.lat,
+                        longitude: this.lon,
+                        team_id: this.teamId || 0,
+                        spawn: this.raidSpawnTimestamp || 0,
+                        start: this.raidBattleTimestamp || 0,
+                        end: this.raidEndTimestamp || 0,
+                        level: this.raidLevel || 0,
+                        pokemon_id: this.raidPokemonId || 0,
+                        cp: this.raidPokemonCp || 0,
+                        gender: this.raidPokemonGender || 0,
+                        form: this.raidPokemonForm || 0,
+                        move_1: this.raidPokemonMove1 || 0,
+                        move_2: this.raidPokemonMove2 || 0,
+                        ex_raid_eligible: this.exRaidEligible || 0,
+                        is_exclusive: this.raidIsExclusive || false,
+                        sponsor_id: this.sponsorId || 0,
+                    }
+                };
         }
     }
 }
