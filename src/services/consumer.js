@@ -4,6 +4,7 @@ const moment = require('moment');
 const S2 = require('nodes2ts');
 
 const config = require('../config.json');
+const Account = require('../models/account.js');
 const Gym = require('../models/gym.js');
 const Pokemon = require('../models/pokemon.js');
 const Pokestop = require('../models/pokestop.js');
@@ -1096,13 +1097,13 @@ class Consumer {
 
     async updatePlayerData(playerData) {
         if (playerData.length > 0) {
-            let playerDataSQL = '';
+            let playerDataSQL = [];
             for (let i = 0; i < playerData.length; i++) {
                 let data = playerData[i];
                 try {
                     let account;
                     try {
-                        account = Account.getWithUsername(this.username);
+                        account = await Account.getWithUsername(this.username);
                     } catch {
                         account = null;
                     }

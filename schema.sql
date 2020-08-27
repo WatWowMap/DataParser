@@ -220,6 +220,8 @@ CREATE TABLE IF NOT EXISTS `pokemon` (
   `capture_1` double(18,14) DEFAULT NULL,
   `capture_2` double(18,14) DEFAULT NULL,
   `capture_3` double(18,14) DEFAULT NULL,
+  `pvp_rankings_great_league` text DEFAULT NULL,
+  `pvp_rankings_ultra_league` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `ix_coords` (`lat`,`lon`),
   KEY `ix_pokemon_id` (`pokemon_id`),
