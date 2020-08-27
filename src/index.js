@@ -8,7 +8,6 @@ const config = require('./config.json');
 const WebhookController = require('./services/webhook.js');
 const instances = config.clusters || 4;
 
-// TODO: Fix quests and raids
 // TODO: Add PvP w/ redis
 // TODO: Add raw proto to redis
 // TODO: Loop redis insert into mysql

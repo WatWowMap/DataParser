@@ -65,6 +65,7 @@ class RouteController {
         let fortDetails = [];
         let gymInfos = [];
         let quests = [];
+        let fortSearch = [];
         let encounters = [];
         let cells = [];
         let playerData = [];
@@ -120,6 +121,7 @@ class RouteController {
                                 let quest = fsr.challenge_quest.quest;
                                 quests.push(quest);
                             }
+                            fortSearch.push(fsr);
                         } else {
                             console.error('[Raw] Malformed FortSearchResponse');
                         }
@@ -295,6 +297,7 @@ class RouteController {
             'wild': wildPokemons.length,
             'forts': forts.length,
             'quests': quests.length,
+            'fort_search': fortSearch.length,
             'encounters': encounters.length,
             'level': trainerLevel,
             'only_empty_gmos': containsGMO && isEmptyGMO,

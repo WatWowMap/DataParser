@@ -152,7 +152,10 @@ class Pokestop {
 
     static async getById(id) {
         let sql = `
-        SELECT id, name, lat, lon
+        SELECT id, lat, lon, name, url, lure_expire_timestamp, last_modified_timestamp, updated,
+        enabled, quest_type, quest_timestamp, quest_target, quest_conditions, quest_rewards,
+        quest_template, cell_id, deleted, lure_id, pokestop_display, incident_expire_timestamp,
+        first_seen_timestamp, grunt_type, sponsor_id
         FROM pokestop
         WHERE id = ?
         `;
