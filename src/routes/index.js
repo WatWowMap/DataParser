@@ -67,6 +67,7 @@ class RouteController {
         let quests = [];
         let encounters = [];
         let cells = [];
+        let playerData = [];
     
         let isEmptyGMO = true;
         let isInvalidGMO = true;
@@ -92,14 +93,14 @@ class RouteController {
     
             switch (method) {
                 case 2: // GetPlayerResponse
-                    /*
                     try {
                         let gpr = POGOProtos.Networking.Responses.GetPlayerResponse.decode(base64_decode(data));
                         if (gpr) {
                             // TODO: Parse GetPlayerResponse
                             if (gpr.success) {
                                 let data = gpr.player_data;
-                                console.debug('[Raw] GetPlayerData:', data);
+                                //console.debug('[Raw] GetPlayerData:', data);
+                                playerData.push(data);
                             }
                         } else {
                             console.error('[Raw] Malformed GetPlayerResponse');
@@ -107,7 +108,6 @@ class RouteController {
                     } catch (err) {
                         console.error('[Raw] Unable to decode GetPlayerResponse');
                     }
-                    */
                     break;
                 case 4: // GetHoloInventoryResponse
                     // TODO: Parse GetHoloInventoryResponse
@@ -279,6 +279,10 @@ class RouteController {
 
         if (encounters.length > 0) {
             await this.consumers[username].updateEncounters(encounters);
+        }
+
+        if (playerData.length > 0) {
+            console.log('PlayerData:', username, playerData);
         }
 
         let endTime = process.hrtime(startTime);

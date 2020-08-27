@@ -8,6 +8,8 @@ const config = require('./config.json');
 const WebhookController = require('./services/webhook.js');
 const instances = config.clusters || 4;
 
+// TODO: Fix invasions saving
+// TODO: Add PvP
 // TODO: Add raw proto to redis
 // TODO: Loop redis insert into mysql
 
@@ -21,7 +23,7 @@ if (cluster.isMaster) {
 
     // If worker gets disconnected, start new one. 
     cluster.on('disconnect', function (worker) {
-        console.error(`[Cluster] Worker disconnect: ${worker.id}`);
+        console.error(`[Cluster] Worker disconnected with id ${worker.id}`);
         let newWorker = cluster.fork();
         console.log('[Cluster] New worker started with process id %s', newWorker.process.pid);
     });

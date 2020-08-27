@@ -204,8 +204,6 @@ class WebhookController {
         if (events.length > 0) {
             // Send the events to each webhook
             this.urls.forEach(url => this.sendEvents(events, url));
-        } else {
-            console.log('No events to send');
         }
     }
 

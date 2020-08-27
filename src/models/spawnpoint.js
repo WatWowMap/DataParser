@@ -83,10 +83,10 @@ class Spawnpoint {
             INSERT INTO spawnpoint (id, lat, lon, despawn_sec, updated)
             VALUES (?, ?, ?, ?, UNIX_TIMESTAMP())
             ON DUPLICATE KEY UPDATE
-            lat=VALUES(lat),
-            lon=VALUES(lon),
-            updated=VALUES(updated),
-            despawn_sec=VALUES(despawn_sec)
+                lat=VALUES(lat),
+                lon=VALUES(lon),
+                updated=VALUES(updated),
+                despawn_sec=VALUES(despawn_sec)
         `;
         let args = [this.id, this.lat, this.lon, this.despawnSecond || null];
         try {

@@ -145,7 +145,7 @@ class Consumer {
                 `;
                 try {
                     let result = await db.query(sqlUpdate);
-                    //console.log('Result:', result);
+                    //console.log('[Wild] Result:', result.affectedRows);
                 } catch (err) {
                     console.error('[Wild] Error:', err);
                     console.error('[Wild] sql:', sqlUpdate);
@@ -273,7 +273,7 @@ class Consumer {
                 capture_3=VALUES(capture_3)
                 `;
                 let result = await db.query(sqlUpdate);
-                //console.log('Result:', result);
+                //console.log('[Nearby] Result:', result.affectedRows);
             }
         }
     }
@@ -546,7 +546,7 @@ class Consumer {
                     sponsor_id=VALUES(sponsor_id)
                 `;
                 let result = await db.query(sqlUpdate);
-                //console.log('Result:', result);
+                //console.log('[Gym] Result:', result.affectedRows);
             }
             if (pokestopsSQL.length > 0) {
                 let sqlUpdate = `INSERT INTO pokestop (
@@ -582,7 +582,7 @@ class Consumer {
                     sponsor_id=VALUES(sponsor_id)
                 `;
                 let result = await db.query(sqlUpdate);
-                //console.log('Result:', result);
+                //console.log('[Pokestop] Result:', result.affectedRows);
             }
         }
     }
@@ -739,7 +739,7 @@ class Consumer {
                 first_seen_timestamp=VALUES(first_seen_timestamp)
             `;
             let result = await db.query(sqlUpdate);
-            //console.log('Result:', result);
+            //console.log('[FortDetails] Result:', result.affectedRows);
         }
     }
 
@@ -771,7 +771,7 @@ class Consumer {
                 updated=VALUES(first_seen_timestamp)
             `;
             let result = await db.query(sqlUpdate);
-            //console.log('Result:', result);
+            //console.log('[GymInfos] Result:', result.affectedRows);
         }
     }
 
@@ -810,7 +810,7 @@ class Consumer {
                 updated=VALUES(updated)
             `;
             let result = await db.query(sqlUpdate);
-            //console.log('Result:', result);
+            //console.log('[Cell] Result:', result.affectedRows);
         }
     }
 
@@ -869,7 +869,7 @@ class Consumer {
                 updated=VALUES(updated)
             `;
             let result = await db.query(sqlUpdate);
-            //console.log('Result:', result);
+            //console.log('[Weather] Result:', result.affectedRows);
         }
     }
 
@@ -1002,9 +1002,9 @@ class Consumer {
             `;
             try {
                 let result = await db.query(sqlUpdate);
-                //console.log('Result:', result);
+                //console.log('[Encounter] Result:', result.affectedRows);
             } catch (err) {
-                console.error('encounter error:', err.message);
+                //console.error('encounter error:', err.message);
             }
         }
     }
@@ -1012,7 +1012,6 @@ class Consumer {
     async updateQuests(quests) {
         if (quests.length > 0) {
             let questsSQL = [];
-            let ts = new Date().getTime() / 1000;
             for (let i = 0; i < quests.length; i++) {
                 let quest = quests[i];
                 try {
@@ -1091,7 +1090,87 @@ class Consumer {
                 sponsor_id=VALUES(sponsor_id)
             `;
             let result = await db.query(sqlUpdate);
-            //console.log('Result:', result);
+            //console.log('[Quest] Result:', result.affectedRows);
+        }
+    }
+
+    async updatePlayerData(playerData) {
+        if (playerData.length > 0) {
+            let playerDataSQL = '';
+            for (let i = 0; i < playerData.length; i++) {
+                let data = playerData[i];
+                try {
+                    let account;
+                    try {
+                        account = Account.getWithUsername(this.username);
+                    } catch {
+                        account = null;
+                    }
+                    if (account instanceof Account) {
+                        // Add quest data to pokestop object
+                        account.parsePlayerData(data);
+                    }
+                    playerDataSQL.push(`
+                    (
+                        '${account.username}',
+                        '${account.password}',
+                        ${account.firstWarningTimestamp},                        
+                        ${account.failedTimestamp},
+                        ${account.failed},
+                        ${account.level},
+                        ${account.last_encounter_lat},
+                        ${account.last_encounter_lon},
+                        ${account.last_encounter_time},
+                        ${account.spins},
+                        ${account.tutorial},
+                        ${account.creationTimestampMs},
+                        ${account.warn},
+                        ${account.warnExpireMs},
+                        ${account.warnMessageAcknowledged},
+                        ${account.suspendedMessageAcknowledged},
+                        ${account.wasSuspended},
+                        ${account.banned},
+                        ${account.creationTimestamp},
+                        ${account.warnExpireTimestamp}
+                    )`);
+                } catch (err) {
+                    console.error('[Account] Error:', err);
+                }
+            }
+
+            let sqlUpdate = `INSERT INTO account (
+                username, password, first_warning_timestamp, failed, level,
+                last_encounter_lat, last_encounter_lon, last_encounter_time,
+                spins, tutorial, creation_timestamp_ms, warn, warn_expire_ms,
+                warn_message_acknowledged, suspended_message_acknowledged,
+                was_suspended, banned, creation_timestamp, warn_expire_timestamp
+            ) VALUES
+            `;
+            sqlUpdate += playerDataSQL.join(',');
+            //console.log('sql:', sqlUpdate);
+            sqlUpdate += ` 
+            ON DUPLICATE KEY UPDATE
+                password=VALUES(password),
+                first_warning_timestamp=VALUES(first_warning_timestamp),
+                failed=VALUES(failed),
+                level=VALUES(level),
+                last_encounter_lat=VALUES(last_encounter_lat),
+                last_encounter_lon=VALUES(last_encounter_lon),
+                last_encounter_time=VALUES(last_encounter_time),
+                spins=VALUES(spins),
+                tutorial=VALUES(tutorial),
+                creation_timestamp_ms=VALUES(creation_timestamp_ms),
+                warn=VALUES(warn),
+                warn_expire_ms=VALUES(warn_expire_ms),
+                warn_message_acknowledged=VALUES(warn_message_acknowledged),
+                suspended_message_acknowledged=VALUES(suspended_message_acknowledged),
+                was_suspended=VALUES(was_suspended),
+                banned=VALUES(banned),
+                creation_timestamp=VALUES(creation_timestamp),
+                warn_expire_timestamp=VALUES(warn_expire_timestamp)
+            `;
+            let result = await db.query(sqlUpdate);
+            console.log('[PlayerData] Result:', result.affectedRows);
         }
     }
 }
