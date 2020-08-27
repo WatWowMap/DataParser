@@ -620,7 +620,7 @@ class Consumer {
             if (oldGym.cellId && !gym.cellId) {
                 gym.cellId = oldGym.cellId;
             }
-            if (oldGym.name && gym.name) {
+            if (oldGym.name && !gym.name) {
                 gym.name = oldGym.name;
             }
             if (oldGym.url && !gym.url) {
@@ -629,22 +629,23 @@ class Consumer {
             if (oldGym.raidIsExclusive && !gym.raidIsExclusive) {
                 gym.raidIsExclusive = oldGym.raidIsExclusive;
             }
-            if (oldGym.availableSlots !== gym.availableSlots || oldGym.teamId !== gym.teamId || oldGym.inBattle !== gym.inBattle) {
+            if (oldGym.availableSlots !== gym.availableSlots ||
+                oldGym.teamId !== gym.teamId ||
+                oldGym.inBattle !== gym.inBattle) {
                 WebhookController.instance.addGymInfoEvent(gym.toJson('gym-info'));
             }
             if (!gym.raidEndTimestamp && oldGym.raidEndTimestamp) {
                 gym.raidEndTimestamp = oldGym.raidEndTimestamp;
             }
             // TODO: Double check
-            if (gym.raidSpawnTimestamp && raidSpawnTimestamp > 0 &&
-                (
-                    oldGym.raidLevel != gym.raidLevel ||
-                    oldGym.raidPokemonId != gym.raidPokemonId ||
-                    oldGym.raidSpawnTimestamp != gym.raidSpawnTimestamp
+            if (gym.raidSpawnTimestamp > 0 && (
+                    oldGym.raidLevel !== gym.raidLevel ||
+                    oldGym.raidPokemonId !== gym.raidPokemonId ||
+                    oldGym.raidSpawnTimestamp !== gym.raidSpawnTimestamp
                 )) {
                 
-                let raidBattleTime = new Date((raidBattleTimestamp || 0) * 1000);
-                let raidEndTime = new Date((raidEndTimestamp || 0) * 1000);
+                let raidBattleTime = new Date((gym.raidBattleTimestamp || 0) * 1000);
+                let raidEndTime = new Date((gym.raidEndTimestamp || 0) * 1000);
                 let now = new Date().getTime() / 1000;
 
                 if (raidBattleTime > now && gym.raidLevel || 0 > 0) {
@@ -652,7 +653,6 @@ class Consumer {
                 } else if (raidEndTime > now && gym.raidPokemonId || 0 > 0) {
                     WebhookController.instance.addRaidEvent(gym.toJson('raid'));
                 }
-                
             }
         }
     }

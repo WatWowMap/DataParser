@@ -30,6 +30,18 @@ class Gym {
                 this.url = null;
             }
             this.totalCp = data.fort.owned_by_team ? data.fort.gym_display.total_gym_cp : 0;
+            this.raidEndTimestamp = null;
+            this.raidSpawnTimestamp = null;
+            this.raidBattleTimestamp = null;
+            this.raidLevel = null;
+            this.raidIsExclusive = 0;
+            this.raidPokemonId = 0;
+            this.raidPokemonMove1 = 0;
+            this.raidPokemonMove2 = 0;
+            this.raidPokemonCp = 0;
+            this.raidPokemonForm = 0;
+            this.raidPokemonGender = 0;
+            this.raidPokemonCostume = 0; // TODO:
             if (data.fort.raid_info) {
                 this.raidEndTimestamp = data.fort.raid_info.raid_end_ms / 1000;
                 this.raidSpawnTimestamp = data.fort.raid_info.raid_spawn_ms / 1000;
@@ -43,26 +55,7 @@ class Gym {
                     this.raidPokemonCp = data.fort.raid_info.raid_pokemon.cp;
                     this.raidPokemonForm = data.fort.raid_info.raid_pokemon.pokemon_display.form;
                     this.raidPokemonGender = data.fort.raid_info.raid_pokemon.pokemon_display.gender;
-                } else {
-                    this.raidPokemonId = null;
-                    this.raidPokemonMove1 = null;
-                    this.raidPokemonMove2 = null;
-                    this.raidPokemonCp = null;
-                    this.raidPokemonForm = null;
-                    this.raidPokemonGender = null;
                 }
-            } else {
-                this.raidEndTimestamp = null;
-                this.raidSpawnTimestamp = null;
-                this.raidBattleTimestamp = null;
-                this.raidLevel = null;
-                this.raidIsExclusive = null;
-                this.raidPokemonId = null;
-                this.raidPokemonMove1 = null;
-                this.raidPokemonMove2 = null;
-                this.raidPokemonCp = null;
-                this.raidPokemonForm = null;
-                this.raidPokemonGender = null;
             }
             let ts = new Date().getTime() / 1000;
             this.cellId = data.cellId;
