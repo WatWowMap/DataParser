@@ -467,7 +467,7 @@ class Consumer {
                                 cellId: fort.cell,
                                 fort: fort.data
                             });
-                            await this.updatePokestopValues(pokestop);
+                            await this.updatePokestopValues(pokestop, false);
                             pokestopsSQL.push(`
                             (
                                 '${pokestop.id}',
