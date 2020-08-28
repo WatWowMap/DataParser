@@ -278,34 +278,16 @@ class Pokemon {
             }
         }
 
-        this.pvpRankingsGreatLeague = PvPStatsManager.instance.getPVPStatsWithEvolutions(
+        let pvpGreat = PvPStatsManager.instance.getPVPStatsWithEvolutions(
             encounter.wild_pokemon.pokemon_data.pokemon_id,
             this.form ? this.form : null,
             encounter.wild_pokemon.pokemon_data.pokemon_display.costume,
             new IV(parseInt(this.atkIv), parseInt(this.defIv), parseInt(this.staIv)),
             parseFloat(this.level),
             League.Great
-        ).map(ranking => {
-            if (ranking.current) {
-                return {
-                    "pokemon": ranking.pokemonWithForm.pokemon,
-                    "form": ranking.pokemonWithForm.form || 0,
-                    "rank": ranking.current.rank,
-                    "percentage": ranking.current.percentage,
-                    "cp": ranking.current.ivs[0].cp,
-                    "level": ranking.current.ivs[0].level
-                };
-            }
-        });
-
-        this.pvpRankingsUltraLeague = PvPStatsManager.instance.getPVPStatsWithEvolutions(
-            encounter.wild_pokemon.pokemon_data.pokemon_id,
-            this.form ? this.form : null,
-            encounter.wild_pokemon.pokemon_data.pokemon_display.costume,
-            new IV(parseInt(this.atkIv), parseInt(this.defIv), parseInt(this.staIv)),
-            parseFloat(this.level),
-            League.Ultra
-            ).map(ranking => {
+        );
+        if (pvpGreat && pvpGreat.length > 0) {
+            this.pvpRankingsGreatLeague = pvpGreat.map(ranking => {
                 if (ranking.current) {
                     return {
                         "pokemon": ranking.pokemonWithForm.pokemon,
@@ -317,6 +299,30 @@ class Pokemon {
                     };
                 }
             });
+        }
+
+        let pvpUltra = PvPStatsManager.instance.getPVPStatsWithEvolutions(
+            encounter.wild_pokemon.pokemon_data.pokemon_id,
+            this.form ? this.form : null,
+            encounter.wild_pokemon.pokemon_data.pokemon_display.costume,
+            new IV(parseInt(this.atkIv), parseInt(this.defIv), parseInt(this.staIv)),
+            parseFloat(this.level),
+            League.Ultra
+        );
+        if (pvpUltra && pvpUltra.length > 0) {
+            this.pvpRankingsUltraLeague = pvpUltra.map(ranking => {
+                if (ranking.current) {
+                    return {
+                        "pokemon": ranking.pokemonWithForm.pokemon,
+                        "form": ranking.pokemonWithForm.form || 0,
+                        "rank": ranking.current.rank,
+                        "percentage": ranking.current.percentage,
+                        "cp": ranking.current.ivs[0].cp,
+                        "level": ranking.current.ivs[0].level
+                    };
+                }
+            });
+        }
 
         this.updated = new Date().getTime() / 1000;
         this.changed = this.updated;
