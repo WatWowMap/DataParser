@@ -9,5 +9,10 @@
         "password": "pass123",
         "database": "rdmdb",
         "charset": "utf8mb4"
+    },
+    "webhooks": {
+        "enabled": false,
+        "urls": ["http://127.0.0.1:9001"],
+        "delay": 5
     }
 }

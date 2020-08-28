@@ -40,6 +40,34 @@ class Account {
         }
     }
 
+    parsePlayerData(playerData) {
+        this.creationTimestamp = parseInt(playerData.player_data.creation_timestamp_ms / 1000);
+        this.warn = playerData.warn;
+        let warnExpireTimestamp = parseInt(playerData.warn_expire_ms / 1000);
+        if (warnExpireTimestamp > 0) {
+            this.warnExpireTimestamp = warnExpireTimestamp;
+        }
+        this.warnMessageAcknowledged = playerData.warn_message_acknowledged;
+        this.suspendedMessageAcknowledged = playerData.suspended_message_acknowledged;
+        this.wasSuspended = playerData.was_suspended;
+        this.banned = playerData.banned;
+
+        if (playerData.warn && !failed) {
+            this.failed = 'GPR_RED_WARNING';
+            let ts = new Date().getTime() / 1000;
+            if (!this.firstWarningTimestamp) {
+                this.firstWarningTimestamp = ts;
+            }
+            this.failedTimestamp = ts;
+            console.debug(`[Account] Account Name: ${self.username} - Username: ${playerData.player_data.username} - Red Warning: ${playerData.warn}`);
+        }
+        if (playerData.banned) {
+            this.failed = 'GPR_BANNED';
+            this.failedTimestamp = new Date().getTime() / 1000;
+            console.debug(`[Account] Account Name: ${this.username} - Username: ${playerData.player_data.username} - Banned: ${playerData.banned}`);
+        }
+    }
+
     /**
      * Get new account between minimum and maximum level.
      * @param minLevel 

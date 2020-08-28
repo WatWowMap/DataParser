@@ -65,8 +65,10 @@ class RouteController {
         let fortDetails = [];
         let gymInfos = [];
         let quests = [];
+        let fortSearch = [];
         let encounters = [];
         let cells = [];
+        let playerData = [];
     
         let isEmptyGMO = true;
         let isInvalidGMO = true;
@@ -92,14 +94,14 @@ class RouteController {
     
             switch (method) {
                 case 2: // GetPlayerResponse
-                    /*
                     try {
                         let gpr = POGOProtos.Networking.Responses.GetPlayerResponse.decode(base64_decode(data));
                         if (gpr) {
                             // TODO: Parse GetPlayerResponse
                             if (gpr.success) {
                                 let data = gpr.player_data;
-                                console.debug('[Raw] GetPlayerData:', data);
+                                //console.debug('[Raw] GetPlayerData:', data);
+                                playerData.push(data);
                             }
                         } else {
                             console.error('[Raw] Malformed GetPlayerResponse');
@@ -107,7 +109,6 @@ class RouteController {
                     } catch (err) {
                         console.error('[Raw] Unable to decode GetPlayerResponse');
                     }
-                    */
                     break;
                 case 4: // GetHoloInventoryResponse
                     // TODO: Parse GetHoloInventoryResponse
@@ -120,6 +121,7 @@ class RouteController {
                                 let quest = fsr.challenge_quest.quest;
                                 quests.push(quest);
                             }
+                            fortSearch.push(fsr);
                         } else {
                             console.error('[Raw] Malformed FortSearchResponse');
                         }
@@ -281,6 +283,10 @@ class RouteController {
             await this.consumers[username].updateEncounters(encounters);
         }
 
+        if (playerData.length > 0) {
+            await this.consumers[username].updatePlayerData(playerData);
+        }
+
         let endTime = process.hrtime(startTime);
         let ms = (endTime[0] * 1000000000 + endTime[1]) / 1000000;
         if (total > 0) {
@@ -291,6 +297,7 @@ class RouteController {
             'wild': wildPokemons.length,
             'forts': forts.length,
             'quests': quests.length,
+            'fort_search': fortSearch.length,
             'encounters': encounters.length,
             'level': trainerLevel,
             'only_empty_gmos': containsGMO && isEmptyGMO,

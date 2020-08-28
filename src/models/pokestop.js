@@ -152,7 +152,10 @@ class Pokestop {
 
     static async getById(id) {
         let sql = `
-        SELECT id, name, lat, lon
+        SELECT id, lat, lon, name, url, lure_expire_timestamp, last_modified_timestamp, updated,
+        enabled, quest_type, quest_timestamp, quest_target, quest_conditions, quest_rewards,
+        quest_template, cell_id, deleted, lure_id, pokestop_display, incident_expire_timestamp,
+        first_seen_timestamp, grunt_type, sponsor_id
         FROM pokestop
         WHERE id = ?
         `;
@@ -324,6 +327,69 @@ class Pokestop {
         this.questConditions = conditions;
         this.questRewards = rewards;
         this.questTimestamp = ts;
+    }
+
+    /**
+     * Get Pokestop object as JSON object with correct property keys for webhook payload
+     * @param {*} type 
+     */
+    toJson(type) {
+        switch (type) {
+            case "quest": // Quest
+                return {
+                    type: "quest",
+                    message: {
+                        pokestop_id: this.id,
+                        latitude: this.lat,
+                        longitude: this.lon,
+                        type: this.questType,
+                        target: this.questTarget,
+                        template: this.questTemplate,
+                        conditions: this.questConditions,
+                        rewards: this.questRewards,
+                        updated: this.questTimestamp,
+                        pokestop_name: this.name || "Unknown",
+                        pokestop_url: this.url || ""
+                    }
+                };
+            case "invasion": // Invasion
+                return {
+                    type: "invasion",
+                    message: {
+                        pokestop_id: this.id,
+                        latitude: this.lat,
+                        longitude: this.lon,
+                        name: this.name || "Unknown",
+                        url: this.url || "",
+                        lure_expiration: this.lureExpireTimestamp || 0,
+                        last_modified: this.lastModifiedTimestamp || 0,
+                        enabled: this.enabled || true,
+                        lure_id: this.lureId || 0,
+                        pokestop_display: this.pokestopDisplay || 0,
+                        incident_expire_timestamp: this.incidentExpireTimestamp || 0,
+                        grunt_type: this.gruntType || 0,
+                        updated: this.updated || 1
+                    }
+                };
+            default: // Pokestop
+                return {
+                    type: "pokestop",
+                    message: {
+                        pokestop_id: this.id,
+                        latitude: this.lat,
+                        longitude: this.lon,
+                        name: this.name || "Unknown",
+                        url: this.url || "",
+                        lure_expiration: this.lureExpireTimestamp || 0,
+                        last_modified: this.lastModifiedTimestamp || 0,
+                        enabled: this.enabled || true,
+                        lure_id: this.lureId || 0,
+                        pokestop_display: this.pokestopDisplay || 0,
+                        incident_expire_timestamp: this.incidentExpireTimestamp || 0,
+                        updated: this.updated || 1
+                    }
+                };
+        }
     }
 }
 

@@ -46,7 +46,7 @@ class MySQLConnector {
           
                 // Use the connection
                 connection.query(sql, args, (error, results, fields) => {
-                    // When done with the connection, release it
+                    // When done with the connection, release it back to the pool
                     connection.release();
                     // Handle error after the release
                     if (error) {

@@ -4,13 +4,18 @@ const moment = require('moment');
 const S2 = require('nodes2ts');
 
 const config = require('../config.json');
+const Account = require('../models/account.js');
 const Gym = require('../models/gym.js');
 const Pokemon = require('../models/pokemon.js');
 const Pokestop = require('../models/pokestop.js');
 const Spawnpoint = require('../models/spawnpoint.js');
 
 const MySQLConnector = require('../services/mysql.js');
+const WebhookController = require('../services/webhook.js');
+const Weather = require('../models/weather');
 const db = new MySQLConnector(config.db);
+
+// TODO: Break out class into model classes
 
 class Consumer {
 
@@ -88,7 +93,9 @@ class Consumer {
                         ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
-                        ${pokemon.capture3 || null}
+                        ${pokemon.capture3 || null},
+                        ${pokemon.pvpRankingsGreatLeague ? JSON.stringify(pokemon.pvpRankingsGreatLeague) : null},
+                        ${pokemon.pvpRankingsUltraLeague ? JSON.stringify(pokemon.pvpRankingsUltraLeague) : null}
                     )
                     `);
                 } catch (err) {
@@ -101,47 +108,50 @@ class Consumer {
                     id, pokemon_id, lat, lon, spawn_id, expire_timestamp, atk_iv, def_iv, sta_iv,
                     move_1, move_2, gender, form, cp, level, weather, costume, weight, size,
                     display_pokemon_id, pokestop_id, updated, first_seen_timestamp, changed, cell_id,
-                    expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3
+                    expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3,
+                    pvp_rankings_great_league, pvp_rankings_ultra_league
                 ) VALUES
                 `;
                 sqlUpdate += wildSQL.join(',');
                 //console.log('sql:', sqlUpdate);
                 sqlUpdate += ` 
                 ON DUPLICATE KEY UPDATE
-                pokemon_id=VALUES(pokemon_id),
-                lat=VALUES(lat),
-                lon=VALUES(lon),
-                spawn_id=VALUES(spawn_id),
-                expire_timestamp=VALUES(expire_timestamp),
-                atk_iv=VALUES(atk_iv),
-                def_iv=VALUES(def_iv),
-                sta_iv=VALUES(sta_iv),
-                move_1=VALUES(move_1),
-                move_2=VALUES(move_2),
-                gender=VALUES(gender),
-                form=VALUES(form),
-                cp=VALUES(cp),
-                level=VALUES(level),
-                weather=VALUES(weather),
-                costume=VALUES(costume),
-                weight=VALUES(weight),
-                size=VALUES(size),
-                display_pokemon_id=VALUES(display_pokemon_id),
-                pokestop_id=VALUES(pokestop_id),
-                updated=VALUES(updated),
-                first_seen_timestamp=VALUES(first_seen_timestamp),
-                changed=VALUES(changed),
-                cell_id=VALUES(cell_id),
-                expire_timestamp_verified=VALUES(expire_timestamp_verified),
-                shiny=VALUES(shiny),
-                username=VALUES(username),
-                capture_1=VALUES(capture_1),
-                capture_2=VALUES(capture_2),
-                capture_3=VALUES(capture_3)
+                    pokemon_id=VALUES(pokemon_id),
+                    lat=VALUES(lat),
+                    lon=VALUES(lon),
+                    spawn_id=VALUES(spawn_id),
+                    expire_timestamp=VALUES(expire_timestamp),
+                    atk_iv=VALUES(atk_iv),
+                    def_iv=VALUES(def_iv),
+                    sta_iv=VALUES(sta_iv),
+                    move_1=VALUES(move_1),
+                    move_2=VALUES(move_2),
+                    gender=VALUES(gender),
+                    form=VALUES(form),
+                    cp=VALUES(cp),
+                    level=VALUES(level),
+                    weather=VALUES(weather),
+                    costume=VALUES(costume),
+                    weight=VALUES(weight),
+                    size=VALUES(size),
+                    display_pokemon_id=VALUES(display_pokemon_id),
+                    pokestop_id=VALUES(pokestop_id),
+                    updated=VALUES(updated),
+                    first_seen_timestamp=VALUES(first_seen_timestamp),
+                    changed=VALUES(changed),
+                    cell_id=VALUES(cell_id),
+                    expire_timestamp_verified=VALUES(expire_timestamp_verified),
+                    shiny=VALUES(shiny),
+                    username=VALUES(username),
+                    capture_1=VALUES(capture_1),
+                    capture_2=VALUES(capture_2),
+                    capture_3=VALUES(capture_3),
+                    pvp_rankings_great_league=VALUES(pvp_rankings_great_league),
+                    pvp_rankings_ultra_league=VALUES(pvp_rankings_ultra_league)                    
                 `;
                 try {
                     let result = await db.query(sqlUpdate);
-                    //console.log('Result:', result);
+                    //console.log('[Wild] Result:', result.affectedRows);
                 } catch (err) {
                     console.error('[Wild] Error:', err);
                     console.error('[Wild] sql:', sqlUpdate);
@@ -217,7 +227,9 @@ class Consumer {
                         ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
-                        ${pokemon.capture3 || null}
+                        ${pokemon.capture3 || null},
+                        ${pokemon.pvpRankingsGreatLeague ? JSON.stringify(pokemon.pvpRankingsGreatLeague) : null},
+                        ${pokemon.pvpRankingsUltraLeague ? JSON.stringify(pokemon.pvpRankingsUltraLeague) : null}
                     )
                     `);
                 } catch (err) {
@@ -230,7 +242,8 @@ class Consumer {
                     id, pokemon_id, lat, lon, spawn_id, expire_timestamp, atk_iv, def_iv, sta_iv,
                     move_1, move_2, gender, form, cp, level, weather, costume, weight, size,
                     display_pokemon_id, pokestop_id, updated, first_seen_timestamp, changed, cell_id,
-                    expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3
+                    expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3,
+                    pvp_rankings_great_league, pvp_rankings_ultra_league
                 ) VALUES
                 `;
                 sqlUpdate += nearbySQL.join(',');
@@ -266,10 +279,12 @@ class Consumer {
                 username=VALUES(username),
                 capture_1=VALUES(capture_1),
                 capture_2=VALUES(capture_2),
-                capture_3=VALUES(capture_3)
+                capture_3=VALUES(capture_3),
+                pvp_rankings_great_league=VALUES(pvp_rankings_great_league),
+                pvp_rankings_ultra_league=VALUES(pvp_rankings_ultra_league)
                 `;
                 let result = await db.query(sqlUpdate);
-                //console.log('Result:', result);
+                //console.log('[Nearby] Result:', result.affectedRows);
             }
         }
     }
@@ -284,14 +299,20 @@ class Consumer {
         } catch (err) {
             oldPokemon = null;
         }
+        // First time seeing pokemon
         if (!oldPokemon) {
+            // Check if expire timestamp set
             if (!pokemon.expireTimestamp) {
                 pokemon.expireTimestamp = now + Pokemon.PokemonTimeUnseen;
             }
+            // Set first seen timestamp
             pokemon.firstSeenTimestamp = pokemon.updated;
         } else {
+            // Pokemon was seen before, set first seen timestamp to original
             pokemon.firstSeenTimestamp = oldPokemon.firstSeenTimestamp;
+            // Check if expire timestamp set
             if (!pokemon.expireTimestamp) {
+                // Check if pokemon that doesn't havea a known despawn time was reseen, if so add time to expire timestamp
                 let oldExpireDate = oldPokemon.expireTimestamp;
                 if ((oldExpireDate - now) < Pokemon.PokemonTimeReseen) {
                     pokemon.expireTimestamp = now + Pokemon.PokemonTimeReseen;
@@ -324,9 +345,15 @@ class Consumer {
             if (oldPokemon.pokestopId && !pokemon.pokestopId) {
                 pokemon.pokestopId = oldPokemon.pokestopId;
             }
+            if (oldPokemon.pvpRankingsGreatLeague && !pokemon.pvpRankingsGreatLeague) {
+                pokemon.pvpRankingsGreatLeague = oldPokemon.pvpRankingsGreatLeague;
+            }
+            if (oldPokemon.pvpRankingsUltraLeague && !pokemon.pvpRankingsUltraLeague) {
+                pokemon.pvpRankingsUltraLeague = oldPokemon.pvpRankingsUltraLeague;
+            }
             // Check if we need to update IV and old pokemon atk_id is not set and new pokemon atk_id is set
             if (updateIV && !oldPokemon.atkIv && pokemon.atkIv) {
-                //WebhookController.instance.addPokemonEvent(this);
+                WebhookController.instance.addPokemonEvent(pokemon.toJson());
                 //InstanceController.instance.gotIV(this);
                 pokemon.changed = now;
             } else {
@@ -368,6 +395,7 @@ class Consumer {
             }
         }
 
+        // Known spawn_id, check for despawn time
         if (pokemon.spawnId) {
             let spawnpoint;
             let secondOfHour = null;
@@ -391,6 +419,12 @@ class Consumer {
                 console.error('[Spawnpoint] Error:', err);
             }
         }
+
+        // First time seeing Pokemon, send webhook
+        if (!oldPokemon) {
+            WebhookController.instance.addPokemonEvent(pokemon.toJson());
+        }
+
     }
 
     async updateForts(forts) {
@@ -406,6 +440,7 @@ class Consumer {
                                 cellId: fort.cell,
                                 fort: fort.data
                             });
+                            await this.updateGymValues(gym);
                             gymsSQL.push(`
                             (
                                 '${gym.id}',
@@ -449,6 +484,7 @@ class Consumer {
                                 cellId: fort.cell,
                                 fort: fort.data
                             });
+                            await this.updatePokestopValues(pokestop, false);
                             pokestopsSQL.push(`
                             (
                                 '${pokestop.id}',
@@ -460,12 +496,7 @@ class Consumer {
                                 ${pokestop.lastModifiedTimestamp},
                                 ${pokestop.updated},
                                 ${pokestop.enabled},
-                                ${pokestop.questType},
-                                ${pokestop.questTimestamp},
-                                ${pokestop.questTarget},
-                                ${pokestop.questConditions},
-                                ${pokestop.questRewards},
-                                ${pokestop.questTemplate},
+
                                 ${pokestop.cellId},
                                 ${pokestop.deleted},
                                 ${pokestop.lureId},
@@ -475,6 +506,14 @@ class Consumer {
                                 ${pokestop.gruntType},
                                 ${pokestop.sponsorId}
                             )`);
+                            /*
+                                ${pokestop.questType},
+                                ${pokestop.questTimestamp},
+                                ${pokestop.questTarget},
+                                ${pokestop.questConditions},
+                                ${pokestop.questRewards},
+                                ${pokestop.questTemplate},
+                            */
                             if (!this.stopsIdsPerCell[fort.cell]) {
                                 this.stopsIdsPerCell[fort.cell] = [];
                             }
@@ -491,79 +530,205 @@ class Consumer {
                     id, lat, lon, name, url, last_modified_timestamp, raid_end_timestamp, raid_spawn_timestamp, raid_battle_timestamp, 
                     updated, raid_pokemon_id, guarding_pokemon_id, availble_slots, team_id, raid_level, enabled, ex_raid_eligible, 
                     in_battle, raid_pokemon_move_1, raid_pokemon_move_2, raid_pokemon_form, raid_pokemon_cp, raid_is_exclusive, 
-                    cell_id, deleted, total_cp, first_seen_timestamp, raid_pokemon_gender, sponsor_id) VALUES
+                    cell_id, deleted, total_cp, first_seen_timestamp, raid_pokemon_gender, sponsor_id
+                ) VALUES
                 `;
                 sqlUpdate += gymsSQL.join(',');
                 //console.log('sql:', sqlUpdate);
                 sqlUpdate += ` 
                 ON DUPLICATE KEY UPDATE
-                lat=VALUES(lat),
-                lon=VALUES(lon),
-                name=VALUES(name),
-                url=VALUES(url),
-                last_modified_timestamp=VALUES(last_modified_timestamp),
-                raid_end_timestamp=VALUES(raid_end_timestamp),
-                raid_spawn_timestamp=VALUES(raid_spawn_timestamp),
-                raid_battle_timestamp=VALUES(raid_battle_timestamp),
-                updated=VALUES(updated),
-                raid_pokemon_id=VALUES(raid_pokemon_id),
-                guarding_pokemon_id=VALUES(guarding_pokemon_id),
-                availble_slots=VALUES(availble_slots),
-                team_id=VALUES(team_id),
-                raid_level=VALUES(raid_level),
-                enabled=VALUES(enabled),
-                ex_raid_eligible=VALUES(ex_raid_eligible),
-                in_battle=VALUES(in_battle),
-                raid_pokemon_move_1=VALUES(raid_pokemon_move_1),
-                raid_pokemon_move_2=VALUES(raid_pokemon_move_2),
-                raid_pokemon_form=VALUES(raid_pokemon_form),
-                raid_pokemon_cp=VALUES(raid_pokemon_cp),
-                raid_is_exclusive=VALUES(raid_is_exclusive),
-                cell_id=VALUES(cell_id),
-                deleted=VALUES(deleted),
-                total_cp=VALUES(total_cp),
-                first_seen_timestamp=VALUES(first_seen_timestamp),
-                raid_pokemon_gender=VALUES(raid_pokemon_gender),
-                sponsor_id=VALUES(sponsor_id)
+                    lat=VALUES(lat),
+                    lon=VALUES(lon),
+                    name=VALUES(name),
+                    url=VALUES(url),
+                    last_modified_timestamp=VALUES(last_modified_timestamp),
+                    raid_end_timestamp=VALUES(raid_end_timestamp),
+                    raid_spawn_timestamp=VALUES(raid_spawn_timestamp),
+                    raid_battle_timestamp=VALUES(raid_battle_timestamp),
+                    updated=VALUES(updated),
+                    raid_pokemon_id=VALUES(raid_pokemon_id),
+                    guarding_pokemon_id=VALUES(guarding_pokemon_id),
+                    availble_slots=VALUES(availble_slots),
+                    team_id=VALUES(team_id),
+                    raid_level=VALUES(raid_level),
+                    enabled=VALUES(enabled),
+                    ex_raid_eligible=VALUES(ex_raid_eligible),
+                    in_battle=VALUES(in_battle),
+                    raid_pokemon_move_1=VALUES(raid_pokemon_move_1),
+                    raid_pokemon_move_2=VALUES(raid_pokemon_move_2),
+                    raid_pokemon_form=VALUES(raid_pokemon_form),
+                    raid_pokemon_cp=VALUES(raid_pokemon_cp),
+                    raid_is_exclusive=VALUES(raid_is_exclusive),
+                    cell_id=VALUES(cell_id),
+                    deleted=VALUES(deleted),
+                    total_cp=VALUES(total_cp),
+                    first_seen_timestamp=VALUES(first_seen_timestamp),
+                    raid_pokemon_gender=VALUES(raid_pokemon_gender),
+                    sponsor_id=VALUES(sponsor_id)
                 `;
                 let result = await db.query(sqlUpdate);
-                //console.log('Result:', result);
+                //console.log('[Gym] Result:', result.affectedRows);
             }
             if (pokestopsSQL.length > 0) {
                 let sqlUpdate = `INSERT INTO pokestop (
-                    id, lat, lon, name, url, lure_expire_timestamp, last_modified_timestamp, updated, enabled, quest_type,
-                    quest_timestamp, quest_target, quest_conditions, quest_rewards, quest_template,  cell_id, deleted, lure_id, pokestop_display, incident_expire_timestamp,
-                    first_seen_timestamp, grunt_type, sponsor_id) VALUES
+                    id, lat, lon, name, url, lure_expire_timestamp, last_modified_timestamp, updated,
+                    enabled, cell_id, deleted, lure_id, pokestop_display, incident_expire_timestamp,
+                    first_seen_timestamp, grunt_type, sponsor_id
+                ) VALUES
                 `;
                 sqlUpdate += pokestopsSQL.join(',');
                 //console.log('sql:', sqlUpdate);
                 sqlUpdate += ` 
                 ON DUPLICATE KEY UPDATE
-                lat=VALUES(lat),
-                lon=VALUES(lon),
-                name=VALUES(name),
-                url=VALUES(url),
-                lure_expire_timestamp=VALUES(lure_expire_timestamp),
-                last_modified_timestamp=VALUES(last_modified_timestamp),
-                updated=VALUES(updated),
-                enabled=VALUES(enabled),
-                quest_type=VALUES(quest_type),
-                quest_timestamp=VALUES(quest_timestamp),
-                quest_target=VALUES(quest_target),
-                quest_conditions=VALUES(quest_conditions),
-                quest_rewards=VALUES(quest_rewards),
-                quest_template=VALUES(quest_template),
-                cell_id=VALUES(cell_id),
-                deleted=VALUES(deleted),
-                lure_id=VALUES(lure_id),
-                pokestop_display=VALUES(pokestop_display),
-                incident_expire_timestamp=VALUES(incident_expire_timestamp),
-                first_seen_timestamp=VALUES(first_seen_timestamp),
-                grunt_type=VALUES(grunt_type),
-                sponsor_id=VALUES(sponsor_id)
+                    lat=VALUES(lat),
+                    lon=VALUES(lon),
+                    name=VALUES(name),
+                    url=VALUES(url),
+                    lure_expire_timestamp=VALUES(lure_expire_timestamp),
+                    last_modified_timestamp=VALUES(last_modified_timestamp),
+                    updated=VALUES(updated),
+                    enabled=VALUES(enabled),
+                    cell_id=VALUES(cell_id),
+                    deleted=VALUES(deleted),
+                    lure_id=VALUES(lure_id),
+                    pokestop_display=VALUES(pokestop_display),
+                    incident_expire_timestamp=VALUES(incident_expire_timestamp),
+                    first_seen_timestamp=VALUES(first_seen_timestamp),
+                    grunt_type=VALUES(grunt_type),
+                    sponsor_id=VALUES(sponsor_id)
                 `;
+                /*
+                    quest_type=VALUES(quest_type),
+                    quest_timestamp=VALUES(quest_timestamp),
+                    quest_target=VALUES(quest_target),
+                    quest_conditions=VALUES(quest_conditions),
+                    quest_rewards=VALUES(quest_rewards),
+                    quest_template=VALUES(quest_template),
+                */
                 let result = await db.query(sqlUpdate);
-                //console.log('Result:', result);
+                //console.log('[Pokestop] Result:', result.affectedRows);
+            }
+        }
+    }
+
+    async updateGymValues(gym) {
+        let ts = new Date().getTime() / 1000;
+        let oldGym;
+        try {
+            oldGym = await Gym.getById(gym.id, true);
+        } catch (err) {
+            oldGym = null;
+        }
+        
+        if (gym.raidIsExclusive && Gym.exRaidBossId) {
+            gym.raidPokemonId = Gym.exRaidBossId;
+            gym.raidPokemonForm = Gym.exRaidBossForm || 0;
+        }
+        
+        gym.updated = ts;
+        
+        if (!oldGym) {
+            WebhookController.instance.addGymEvent(gym.toJson('gym'));
+            WebhookController.instance.addGymInfoEvent(gym.toJson('gym-info'));
+            let raidBattleTime = new Date((gym.raidBattleTimestamp || 0) * 1000); // TODO: Probably going to get a divide by zero error >.>
+            let raidEndTime = Date((gym.raidEndTimestamp || 0) * 1000);
+            let now = new Date().getTime() / 1000;            
+            
+            if (raidBattleTime > now && gym.raidLevel || 0 > 0) {
+                WebhookController.instance.addEggEvent(gym.toJson('egg'));
+            } else if (raidEndTime > now && gym.raidPokemonId || 0 > 0) {
+                WebhookController.instance.addRaidEvent(gym.toJson('raid'));
+            }
+        } else {
+            if (oldGym.cellId && !gym.cellId) {
+                gym.cellId = oldGym.cellId;
+            }
+            if (oldGym.name && !gym.name) {
+                gym.name = oldGym.name;
+            }
+            if (oldGym.url && !gym.url) {
+                gym.url = oldGym.url;
+            }
+            if (oldGym.raidIsExclusive && !gym.raidIsExclusive) {
+                gym.raidIsExclusive = oldGym.raidIsExclusive;
+            }
+            if (oldGym.availableSlots !== gym.availableSlots ||
+                oldGym.teamId !== gym.teamId ||
+                oldGym.inBattle !== gym.inBattle) {
+                WebhookController.instance.addGymInfoEvent(gym.toJson('gym-info'));
+            }
+            if (!gym.raidEndTimestamp && oldGym.raidEndTimestamp) {
+                gym.raidEndTimestamp = oldGym.raidEndTimestamp;
+            }
+            // TODO: Double check
+            if (gym.raidSpawnTimestamp > 0 && (
+                    oldGym.raidLevel !== gym.raidLevel ||
+                    oldGym.raidPokemonId !== gym.raidPokemonId ||
+                    oldGym.raidSpawnTimestamp !== gym.raidSpawnTimestamp
+                )) {
+                
+                let raidBattleTime = new Date((gym.raidBattleTimestamp || 0) * 1000);
+                let raidEndTime = new Date((gym.raidEndTimestamp || 0) * 1000);
+                let now = new Date().getTime() / 1000;
+
+                if (raidBattleTime > now && gym.raidLevel || 0 > 0) {
+                    WebhookController.instance.addEggEvent(gym.toJson('egg'));
+                } else if (raidEndTime > now && gym.raidPokemonId || 0 > 0) {
+                    WebhookController.instance.addRaidEvent(gym.toJson('raid'));
+                }
+            }
+        }
+    }
+
+    async updatePokestopValues(pokestop, updateQuest) {
+        let oldPokestop;
+        try {
+            oldPokestop = await Pokestop.getById(pokestop.id);
+        } catch {
+            oldPokestop = null;
+        }
+        pokestop.updated = new Date().getTime() / 1000;
+        
+        if (!oldPokestop) {
+            WebhookController.instance.addPokestopEvent(pokestop.toJson('pokestop'));
+            if ((pokestop.lureExpireTimestamp || 0) > 0) {
+                WebhookController.instance.addLureEvent(pokestop.toJson('lure'));
+            }
+            if ((pokestop.questTimestamp || 0) > 0) {
+                WebhookController.instance.addQuestEvent(pokestop.toJson('quest'));
+            }
+            if ((pokestop.incidentExpireTimestamp || 0) > 0) {
+                WebhookController.instance.addInvasionEvent(pokestop.toJson('invasion'));
+            }
+        } else {
+            if (oldPokestop.cellId && !pokestop.cellId) {
+                pokestop.cellId = oldPokestop.cellId;
+            }
+            if (oldPokestop.name && !pokestop.name) {
+                pokestop.name = oldPokestop.name;
+            }
+            if (oldPokestop.url && !pokestop.url) {
+                pokestop.url = oldPokestop.url;
+            }
+            if (updateQuest && oldPokestop.questType && pokestop.questType) {
+                pokestop.questType = oldPokestop.questType;
+                pokestop.questTarget = oldPokestop.questTarget;
+                pokestop.questConditions = oldPokestop.questConditions;
+                pokestop.questRewards = oldPokestop.questRewards;
+                pokestop.questTimestamp = oldPokestop.questTimestamp;
+                pokestop.questTemplate = oldPokestop.questTemplate;
+            }
+            if (oldPokestop.lureId && !pokestop.lureId) {
+                pokestop.lureId = oldPokestop.lureId;
+            }
+            if ((oldPokestop.lureExpireTimestamp || 0) < (pokestop.lureExpireTimestamp || 0)) {
+                WebhookController.instance.addLureEvent(pokestop.toJson('lure'));
+            }
+            if ((oldPokestop.incidentExpireTimestamp || 0) < (pokestop.incidentExpireTimestamp || 0)) {
+                WebhookController.instance.addInvasionEvent(pokestop.toJson('invasion'));
+            }
+            if (updateQuest && (pokestop.questTimestamp || 0) > (oldPokestop.questTimestamp || 0)) {
+                WebhookController.instance.addQuestEvent(pokestop.toJson('quest'));
             }
         }
     }
@@ -581,7 +746,7 @@ class Consumer {
                     let id = details.fort_id;
                     let lat = details.latitude;
                     let lon = details.longitude;
-                    fortDetailsSQL.push(`('${id}', ${lat}, ${lon}, '${name}', '${url}', ${ts}, ${ts})`);
+                    fortDetailsSQL.push(`('${id}', ${lat}, ${lon}, "${name}", "${url}", ${ts}, ${ts})`);
                 } catch (err) {
                     console.error('[FortDetails] Error:', err);
                 }
@@ -590,15 +755,15 @@ class Consumer {
             sqlUpdate += fortDetailsSQL.join(',');
             sqlUpdate += ` 
             ON DUPLICATE KEY UPDATE
-            lat=VALUES(lat),
-            lon=VALUES(lon),
-            name=VALUES(name),
-            url=VALUES(url),
-            updated=VALUES(updated),
-            first_seen_timestamp=VALUES(first_seen_timestamp)
+                lat=VALUES(lat),
+                lon=VALUES(lon),
+                name=VALUES(name),
+                url=VALUES(url),
+                updated=VALUES(updated),
+                first_seen_timestamp=VALUES(first_seen_timestamp)
             `;
             let result = await db.query(sqlUpdate);
-            //console.log('Result:', result);
+            //console.log('[FortDetails] Result:', result.affectedRows);
         }
     }
 
@@ -622,15 +787,15 @@ class Consumer {
             sqlUpdate += gymInfosSQL.join(',');
             sqlUpdate += ` 
             ON DUPLICATE KEY UPDATE
-            lat=VALUES(lat),
-            lon=VALUES(lon),
-            name=VALUES(name),
-            url=VALUES(url),
-            updated=VALUES(updated),
-            updated=VALUES(first_seen_timestamp)
+                lat=VALUES(lat),
+                lon=VALUES(lon),
+                name=VALUES(name),
+                url=VALUES(url),
+                updated=VALUES(updated),
+                updated=VALUES(first_seen_timestamp)
             `;
             let result = await db.query(sqlUpdate);
-            //console.log('Result:', result);
+            //console.log('[GymInfos] Result:', result.affectedRows);
         }
     }
 
@@ -663,13 +828,13 @@ class Consumer {
             sqlUpdate += cellsSQL.join(',');
             sqlUpdate += ` 
             ON DUPLICATE KEY UPDATE
-            level=VALUES(level),
-            center_lat=VALUES(center_lat),
-            center_lon=VALUES(center_lon),
-            updated=VALUES(updated)
+                level=VALUES(level),
+                center_lat=VALUES(center_lat),
+                center_lon=VALUES(center_lon),
+                updated=VALUES(updated)
             `;
             let result = await db.query(sqlUpdate);
-            //console.log('Result:', result);
+            //console.log('[Cell] Result:', result.affectedRows);
         }
     }
 
@@ -701,6 +866,8 @@ class Consumer {
                         severity = severityCondition.severity;
                         warnWeather = severityCondition.warn_weather;
                     }
+                    const weather = new Weather(cellId, level, lat, lon, gameplayCondition, windDirection, cloudLevel, rainLevel, windLevel, snowLevel, fogLevel, seLevel, severity, warnWeather, ts);
+                    WebhookController.instance.addWeatherEvent(weather.toJson());
                     weatherSQL.push(`(${cellId}, ${level}, ${lat}, ${lon}, ${gameplayCondition}, ${windDirection}, ${cloudLevel}, ${rainLevel}, ${windLevel}, ${snowLevel}, ${fogLevel}, ${seLevel}, ${severity}, ${warnWeather}, ${ts})`);
                 } catch (err) {
                     console.error('[Weather] Error:', err);
@@ -710,23 +877,23 @@ class Consumer {
             sqlUpdate += weatherSQL.join(',');
             sqlUpdate += `
             ON DUPLICATE KEY UPDATE
-            level=VALUES(level),
-            latitude=VALUES(latitude),
-            longitude=VALUES(longitude),
-            gameplay_condition=VALUES(gameplay_condition),
-            wind_direction=VALUES(wind_direction),
-            cloud_level=VALUES(cloud_level),
-            rain_level=VALUES(rain_level),
-            wind_level=VALUES(wind_level),
-            snow_level=VALUES(snow_level),
-            fog_level=VALUES(fog_level),
-            special_effect_level=VALUES(special_effect_level),
-            severity=VALUES(severity),
-            warn_weather=VALUES(warn_weather),
-            updated=VALUES(updated)
+                level=VALUES(level),
+                latitude=VALUES(latitude),
+                longitude=VALUES(longitude),
+                gameplay_condition=VALUES(gameplay_condition),
+                wind_direction=VALUES(wind_direction),
+                cloud_level=VALUES(cloud_level),
+                rain_level=VALUES(rain_level),
+                wind_level=VALUES(wind_level),
+                snow_level=VALUES(snow_level),
+                fog_level=VALUES(fog_level),
+                special_effect_level=VALUES(special_effect_level),
+                severity=VALUES(severity),
+                warn_weather=VALUES(warn_weather),
+                updated=VALUES(updated)
             `;
             let result = await db.query(sqlUpdate);
-            //console.log('Result:', result);
+            //console.log('[Weather] Result:', result.affectedRows);
         }
     }
 
@@ -773,6 +940,7 @@ class Consumer {
                         await spawnpoint.save(false);
                         //console.log('spawnpoint id is null:', pokemon);
                     }
+                    await this.updatePokemonValues(pokemon);
 
                     encountersSQL.push(`
                     (
@@ -806,7 +974,9 @@ class Consumer {
                         ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
-                        ${pokemon.capture3 || null}
+                        ${pokemon.capture3 || null},
+                        ${pokemon.pvpRankingsGreatLeague ? JSON.stringify(pokemon.pvpRankingsGreatLeague) : null},
+                        ${pokemon.pvpRankingsUltraLeague ? JSON.stringify(pokemon.pvpRankingsUltraLeague) : null}
                     )
                     `);
                 } catch (err) {
@@ -818,49 +988,52 @@ class Consumer {
                 id, pokemon_id, lat, lon, spawn_id, expire_timestamp, atk_iv, def_iv, sta_iv,
                 move_1, move_2, gender, form, cp, level, weather, costume, weight, size,
                 display_pokemon_id, pokestop_id, updated, first_seen_timestamp, changed, cell_id,
-                expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3
+                expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3,
+                pvp_rankings_great_league, pvp_rankings_ultra_league
             ) VALUES
             `;
             sqlUpdate += encountersSQL.join(',');
             //console.log('sql:', encountersSQL);
             sqlUpdate += ` 
             ON DUPLICATE KEY UPDATE
-            pokemon_id=VALUES(pokemon_id),
-            lat=VALUES(lat),
-            lon=VALUES(lon),
-            spawn_id=VALUES(spawn_id),
-            expire_timestamp=VALUES(expire_timestamp),
-            atk_iv=VALUES(atk_iv),
-            def_iv=VALUES(def_iv),
-            sta_iv=VALUES(sta_iv),
-            move_1=VALUES(move_1),
-            move_2=VALUES(move_2),
-            gender=VALUES(gender),
-            form=VALUES(form),
-            cp=VALUES(cp),
-            level=VALUES(level),
-            weather=VALUES(weather),
-            costume=VALUES(costume),
-            weight=VALUES(weight),
-            size=VALUES(size),
-            display_pokemon_id=VALUES(display_pokemon_id),
-            pokestop_id=VALUES(pokestop_id),
-            updated=VALUES(updated),
-            first_seen_timestamp=VALUES(first_seen_timestamp),
-            changed=VALUES(changed),
-            cell_id=VALUES(cell_id),
-            expire_timestamp_verified=VALUES(expire_timestamp_verified),
-            shiny=VALUES(shiny),
-            username=VALUES(username),
-            capture_1=VALUES(capture_1),
-            capture_2=VALUES(capture_2),
-            capture_3=VALUES(capture_3)
+                pokemon_id=VALUES(pokemon_id),
+                lat=VALUES(lat),
+                lon=VALUES(lon),
+                spawn_id=VALUES(spawn_id),
+                expire_timestamp=VALUES(expire_timestamp),
+                atk_iv=VALUES(atk_iv),
+                def_iv=VALUES(def_iv),
+                sta_iv=VALUES(sta_iv),
+                move_1=VALUES(move_1),
+                move_2=VALUES(move_2),
+                gender=VALUES(gender),
+                form=VALUES(form),
+                cp=VALUES(cp),
+                level=VALUES(level),
+                weather=VALUES(weather),
+                costume=VALUES(costume),
+                weight=VALUES(weight),
+                size=VALUES(size),
+                display_pokemon_id=VALUES(display_pokemon_id),
+                pokestop_id=VALUES(pokestop_id),
+                updated=VALUES(updated),
+                first_seen_timestamp=VALUES(first_seen_timestamp),
+                changed=VALUES(changed),
+                cell_id=VALUES(cell_id),
+                expire_timestamp_verified=VALUES(expire_timestamp_verified),
+                shiny=VALUES(shiny),
+                username=VALUES(username),
+                capture_1=VALUES(capture_1),
+                capture_2=VALUES(capture_2),
+                capture_3=VALUES(capture_3),
+                pvp_rankings_great_league=VALUES(pvp_rankings_great_league),
+                pvp_rankings_ultra_league=VALUES(pvp_rankings_ultra_league)
             `;
             try {
                 let result = await db.query(sqlUpdate);
-                //console.log('Result:', result);
+                //console.log('[Encounter] Result:', result.affectedRows);
             } catch (err) {
-                console.error('encounter error:', err.message);
+                //console.error('encounter error:', err.message);
             }
         }
     }
@@ -868,26 +1041,26 @@ class Consumer {
     async updateQuests(quests) {
         if (quests.length > 0) {
             let questsSQL = [];
-            let ts = new Date().getTime() / 1000;
             for (let i = 0; i < quests.length; i++) {
                 let quest = quests[i];
+                let pokestop;
                 try {
-                    let pokestop;
-                    try {
-                        pokestop = Pokestop.getWithId(quest.fort_id);
-                    } catch {
-                        pokestop = null;
-                    }
-                    if (pokestop instanceof Pokestop) {
-                        pokestop.addQuest(quest);
-                    }
+                    pokestop = await Pokestop.getById(quest.fort_id);
+                } catch {
+                    pokestop = null;
+                }
+                if (pokestop instanceof Pokestop) {
+                    // Add quest data to pokestop object
+                    pokestop.addQuest(quest);
+                    // Check if we need to send any webhooks
+                    await this.updatePokestopValues(pokestop, true);
                     questsSQL.push(`
                     (
                         '${quest.fort_id}',
                         ${pokestop.lat},
                         ${pokestop.lon},
-                        ${pokestop.name ? '\'' + pokestop.name + '\'' : null},
-                        ${pokestop.url ? '\'' + pokestop.url + '\'' : null},
+                        ${pokestop.name ? '"' + pokestop.name + '"' : null},
+                        ${pokestop.url ? '"' + pokestop.url + '"' : null},
                         ${pokestop.lureExpireTimestamp},
                         ${pokestop.lastModifiedTimestamp},
                         ${pokestop.updated},
@@ -895,9 +1068,9 @@ class Consumer {
                         ${pokestop.questType},
                         ${pokestop.questTimestamp},
                         ${pokestop.questTarget},
-                        ${pokestop.questConditions},
-                        ${pokestop.questRewards},
-                        ${pokestop.questTemplate},
+                        '${JSON.stringify(pokestop.questConditions)}',
+                        '${JSON.stringify(pokestop.questRewards)}',
+                        '${pokestop.questTemplate}',
                         ${pokestop.cellId},
                         ${pokestop.deleted},
                         ${pokestop.lureId},
@@ -907,44 +1080,133 @@ class Consumer {
                         ${pokestop.gruntType},
                         ${pokestop.sponsorId}
                     )`);
-                } catch (err) {
-                    console.error('[Quests] Error:', err);
                 }
             }
-            let sqlUpdate = `INSERT INTO pokestop (
-                id, lat, lon, name, url, lure_expire_timestamp, last_modified_timestamp, updated, enabled, quest_type,
-                quest_timestamp, quest_target, quest_conditions, quest_rewards, quest_template,  cell_id, deleted, lure_id, pokestop_display, incident_expire_timestamp,
-                first_seen_timestamp, grunt_type, sponsor_id) VALUES
-            `;
-            sqlUpdate += questsSQL.join(',');
-            //console.log('sql:', sqlUpdate);
-            sqlUpdate += ` 
-            ON DUPLICATE KEY UPDATE
-            lat=VALUES(lat),
-            lon=VALUES(lon),
-            name=VALUES(name),
-            url=VALUES(url),
-            lure_expire_timestamp=VALUES(lure_expire_timestamp),
-            last_modified_timestamp=VALUES(last_modified_timestamp),
-            updated=VALUES(updated),
-            enabled=VALUES(enabled),
-            quest_type=VALUES(quest_type),
-            quest_timestamp=VALUES(quest_timestamp),
-            quest_target=VALUES(quest_target),
-            quest_conditions=VALUES(quest_conditions),
-            quest_rewards=VALUES(quest_rewards),
-            quest_template=VALUES(quest_template),
-            cell_id=VALUES(cell_id),
-            deleted=VALUES(deleted),
-            lure_id=VALUES(lure_id),
-            pokestop_display=VALUES(pokestop_display),
-            incident_expire_timestamp=VALUES(incident_expire_timestamp),
-            first_seen_timestamp=VALUES(first_seen_timestamp),
-            grunt_type=VALUES(grunt_type),
-            sponsor_id=VALUES(sponsor_id)
-            `;
-            let result = await db.query(sqlUpdate);
-            //console.log('Result:', result);
+            if (questsSQL.length > 0) {
+                let sqlUpdate = `INSERT INTO pokestop (
+                    id, lat, lon, name, url, lure_expire_timestamp, last_modified_timestamp, updated,
+                    enabled, quest_type, quest_timestamp, quest_target, quest_conditions, quest_rewards,
+                    quest_template, cell_id, deleted, lure_id, pokestop_display, incident_expire_timestamp,
+                    first_seen_timestamp, grunt_type, sponsor_id
+                ) VALUES
+                `;
+                sqlUpdate += questsSQL.join(',');
+                //console.log('sql:', sqlUpdate);
+                sqlUpdate += ` 
+                ON DUPLICATE KEY UPDATE
+                    lat=VALUES(lat),
+                    lon=VALUES(lon),
+                    name=VALUES(name),
+                    url=VALUES(url),
+                    lure_expire_timestamp=VALUES(lure_expire_timestamp),
+                    last_modified_timestamp=VALUES(last_modified_timestamp),
+                    updated=VALUES(updated),
+                    enabled=VALUES(enabled),
+                    quest_type=VALUES(quest_type),
+                    quest_timestamp=VALUES(quest_timestamp),
+                    quest_target=VALUES(quest_target),
+                    quest_conditions=VALUES(quest_conditions),
+                    quest_rewards=VALUES(quest_rewards),
+                    quest_template=VALUES(quest_template),
+                    cell_id=VALUES(cell_id),
+                    deleted=VALUES(deleted),
+                    lure_id=VALUES(lure_id),
+                    pokestop_display=VALUES(pokestop_display),
+                    incident_expire_timestamp=VALUES(incident_expire_timestamp),
+                    first_seen_timestamp=VALUES(first_seen_timestamp),
+                    grunt_type=VALUES(grunt_type),
+                    sponsor_id=VALUES(sponsor_id)
+                `;
+                try {
+                    let result = await db.query(sqlUpdate);
+                    //console.log('[Quest] Result:', result.affectedRows);
+                } catch (err) {
+                    console.error('[Quest] Error:', err);
+                    console.error('sql:', sqlUpdate);
+                }
+            }
+        }
+    }
+
+    async updatePlayerData(playerData) {
+        if (playerData.length > 0) {
+            let playerDataSQL = [];
+            for (let i = 0; i < playerData.length; i++) {
+                let data = playerData[i];
+                try {
+                    let account;
+                    try {
+                        account = await Account.getWithUsername(this.username);
+                    } catch {
+                        account = null;
+                    }
+                    if (account instanceof Account) {
+                        // Add quest data to pokestop object
+                        account.parsePlayerData(data);
+                        playerDataSQL.push(`
+                        (
+                            '${account.username}',
+                            '${account.password}',
+                            ${account.firstWarningTimestamp},                        
+                            ${account.failedTimestamp},
+                            ${account.failed},
+                            ${account.level},
+                            ${account.last_encounter_lat},
+                            ${account.last_encounter_lon},
+                            ${account.last_encounter_time},
+                            ${account.spins},
+                            ${account.tutorial},
+                            ${account.creationTimestampMs},
+                            ${account.warn},
+                            ${account.warnExpireMs},
+                            ${account.warnMessageAcknowledged},
+                            ${account.suspendedMessageAcknowledged},
+                            ${account.wasSuspended},
+                            ${account.banned},
+                            ${account.creationTimestamp},
+                            ${account.warnExpireTimestamp}
+                        )`);
+                    }
+                } catch (err) {
+                    console.error('[Account] Error:', err);
+                }
+            }
+
+            if (playerDataSQL.length > 0) {
+                let sqlUpdate = `INSERT INTO account (
+                    username, password, first_warning_timestamp, failed, level,
+                    last_encounter_lat, last_encounter_lon, last_encounter_time,
+                    spins, tutorial, creation_timestamp_ms, warn, warn_expire_ms,
+                    warn_message_acknowledged, suspended_message_acknowledged,
+                    was_suspended, banned, creation_timestamp, warn_expire_timestamp
+                ) VALUES
+                `;
+                sqlUpdate += playerDataSQL.join(',');
+                //console.log('sql:', sqlUpdate);
+                sqlUpdate += ` 
+                ON DUPLICATE KEY UPDATE
+                    password=VALUES(password),
+                    first_warning_timestamp=VALUES(first_warning_timestamp),
+                    failed=VALUES(failed),
+                    level=VALUES(level),
+                    last_encounter_lat=VALUES(last_encounter_lat),
+                    last_encounter_lon=VALUES(last_encounter_lon),
+                    last_encounter_time=VALUES(last_encounter_time),
+                    spins=VALUES(spins),
+                    tutorial=VALUES(tutorial),
+                    creation_timestamp_ms=VALUES(creation_timestamp_ms),
+                    warn=VALUES(warn),
+                    warn_expire_ms=VALUES(warn_expire_ms),
+                    warn_message_acknowledged=VALUES(warn_message_acknowledged),
+                    suspended_message_acknowledged=VALUES(suspended_message_acknowledged),
+                    was_suspended=VALUES(was_suspended),
+                    banned=VALUES(banned),
+                    creation_timestamp=VALUES(creation_timestamp),
+                    warn_expire_timestamp=VALUES(warn_expire_timestamp)
+                `;
+                let result = await db.query(sqlUpdate);
+                console.log('[PlayerData] Result:', result.affectedRows);
+            }
         }
     }
 }

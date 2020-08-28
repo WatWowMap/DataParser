@@ -7,6 +7,7 @@ const Cell = require('./cell.js');
 const Pokestop = require('./pokestop.js');
 const Spawnpoint = require('./spawnpoint.js');
 const MySQLConnector = require('../services/mysql.js');
+const { PvPStatsManager, IV, League } = require('../services/pvp.js');
 const db = new MySQLConnector(config.db);
 
 class Pokemon {
@@ -60,8 +61,8 @@ class Pokemon {
             this.capture1 = data.capture_1;
             this.capture2 = data.capture_2;
             this.capture3 = data.capture_3;
-            this.pvpRankingsGreatLeague = data.pvp_rankings_great_league;
-            this.pvpRankingsUltraLeague = data.pvp_rankings_ultra_league;
+            this.pvpRankingsGreatLeague = data.pvp_rankings_great_league || null;
+            this.pvpRankingsUltraLeague = data.pvp_rankings_ultra_league || null;
         }
         if (!this.firstSeenTimestamp) {
             this.firstSeenTimestamp = new Date().getTime() / 1000;
@@ -187,7 +188,8 @@ class Pokemon {
                 id, pokemon_id, lat, lon, spawn_id, expire_timestamp, atk_iv, def_iv, sta_iv,
                 move_1, move_2, gender, form, cp, level, weather, costume, weight, size,
                 display_pokemon_id, pokestop_id, updated, first_seen_timestamp, changed, cell_id,
-                expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3
+                expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3,
+                pvp_rankings_great_league, pvp_rankings_ultra_league
             FROM pokemon
             WHERE id = ?
             LIMIT 1
@@ -276,6 +278,46 @@ class Pokemon {
             }
         }
 
+        this.pvpRankingsGreatLeague = PvPStatsManager.instance.getPVPStatsWithEvolutions(
+            encounter.wild_pokemon.pokemon_data.pokemon_id,
+            this.form ? this.form : null,
+            encounter.wild_pokemon.pokemon_data.pokemon_display.costume,
+            new IV(parseInt(this.atkIv), parseInt(this.defIv), parseInt(this.staIv)),
+            parseFloat(this.level),
+            League.Great
+        ).map(ranking => {
+            if (ranking.current) {
+                return {
+                    "pokemon": ranking.pokemonWithForm.pokemon,
+                    "form": ranking.pokemonWithForm.form || 0,
+                    "rank": ranking.current.rank,
+                    "percentage": ranking.current.percentage,
+                    "cp": ranking.current.ivs[0].cp,
+                    "level": ranking.current.ivs[0].level
+                };
+            }
+        });
+
+        this.pvpRankingsUltraLeague = PvPStatsManager.instance.getPVPStatsWithEvolutions(
+            encounter.wild_pokemon.pokemon_data.pokemon_id,
+            this.form ? this.form : null,
+            encounter.wild_pokemon.pokemon_data.pokemon_display.costume,
+            new IV(parseInt(this.atkIv), parseInt(this.defIv), parseInt(this.staIv)),
+            parseFloat(this.level),
+            League.Ultra
+            ).map(ranking => {
+                if (ranking.current) {
+                    return {
+                        "pokemon": ranking.pokemonWithForm.pokemon,
+                        "form": ranking.pokemonWithForm.form || 0,
+                        "rank": ranking.current.rank,
+                        "percentage": ranking.current.percentage,
+                        "cp": ranking.current.ivs[0].cp,
+                        "level": ranking.current.ivs[0].level
+                    };
+                }
+            });
+
         this.updated = new Date().getTime() / 1000;
         this.changed = this.updated;
     }
@@ -348,6 +390,48 @@ class Pokemon {
             }
             let despawn = parseInt(ts) + despawnOffset;
             return despawn;
+        }
+    }
+
+    /**
+     * Get Pokemon object as JSON object with correct property keys for webhook payload
+     */
+    toJson() {
+        return {
+            type: 'pokemon',
+            message: {
+                spawnpoint_id: this.spawnId ? this.spawnId.toString(16) : 'None',
+                pokestop_id: this.pokestopId || 'None',
+                encounter_id: this.id,
+                pokemon_id: this.pokemonId,
+                latitude: this.lat,
+                longitude: this.lon,
+                disappear_time: this.expireTimestamp || 0,
+                disappear_time_verified: this.expireTimestampVerified,
+                first_seen: this.firstSeenTimestamp || 1,
+                last_modified_time: this.updated || 1,
+                gender: this.gender,
+                cp: this.cp,
+                form: this.form,
+                costume: this.costume,
+                individual_attack: this.atkIv,
+                individual_defense: this.defIv,
+                individual_stamina: this.staIv,
+                pokemon_level: this.level,
+                move_1: this.move1,
+                move_2: this.move2,
+                weight: this.weight,
+                height: this.size,
+                weather: this.weather,
+                shiny: this.shiny,
+                username: this.username,
+                display_pokemon_id: this.displayPokemonId,
+                capture_1: this.capture1,
+                capture_2: this.capture2,
+                capture_3: this.capture3,
+                pvp_rankings_great_league: this.pvpRankingsGreatLeague,
+                pvp_rankings_ultra_league: this.pvpRankingsUltraLeague,
+            }
         }
     }
 }
