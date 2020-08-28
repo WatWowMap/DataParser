@@ -1,9 +1,9 @@
 # DataParser  
 
-Raw data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/RealDeviceMap) /raw endpoint  
+Raw data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/RealDeviceMap) `/raw` endpoint  
 
 ## Installation  
-1.) Clone repository `git clone https://github.com/versx/DataParser --recursive`  
+1.) Clone repository `git clone --recursive https://github.com/versx/DataParser`  
 2.) Install dependencies `npm install`  
 3.) Copy config `cp src/config.example.json src/config.json`  
 4.) Fill out config `vi src/config.json` (listening port, instances, db info, etc)  
