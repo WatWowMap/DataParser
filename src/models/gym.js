@@ -4,6 +4,13 @@ const config = require('../config.json');
 const MySQLConnector = require('../services/mysql.js');
 const db = new MySQLConnector(config.db);
 
+const PokemonEvolution = {
+	Unset: 0,
+	Mega: 1,
+	MegaX: 2,
+	MegaY: 3
+};
+
 class Gym {
 
     constructor(data) {
@@ -55,6 +62,11 @@ class Gym {
                     this.raidPokemonCp = data.fort.raid_info.raid_pokemon.cp;
                     this.raidPokemonForm = data.fort.raid_info.raid_pokemon.pokemon_display.form;
                     this.raidPokemonGender = data.fort.raid_info.raid_pokemon.pokemon_display.gender;
+                    if (data.fort.raid_info.raid_pokemon.pokemon_display.pokemon_evolution) {
+                        this.raidPokemonEvolution = data.fort.raid_info.pokemon_display.pokemon_evolution;
+                    } else {
+                        this.raidPokemonEvolution = null;
+                    }
                 }
             }
             let ts = new Date().getTime() / 1000;
@@ -86,6 +98,7 @@ class Gym {
             this.raidPokemonForm = data.raid_pokemon_form || null;
             this.raidPokemonCp = data.raidPokemon_cp || null;
             this.raidPokemonGender = data.raid_pokemon_gender || null;
+            this.raidPokemonEvolution = data.raid_pokemon_evolution || null;
             this.raidIsExclusive = data.raid_is_exclusive || null;
             this.cellId = data.cell_id;
             this.totalCp = data.total_cp || 0;

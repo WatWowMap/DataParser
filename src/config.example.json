@@ -12,7 +12,7 @@
     },
     "webhooks": {
         "enabled": false,
-        "urls": [],
+        "urls": ["http://127.0.0.1:9001"],
         "delay": 5
     }
 }

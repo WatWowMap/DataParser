@@ -93,7 +93,9 @@ class Consumer {
                         ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
-                        ${pokemon.capture3 || null}
+                        ${pokemon.capture3 || null},
+                        '${JSON.stringify(pokemon.pvpRankingsGreatLeague)}',
+                        '${JSON.stringify(pokemon.pvpRankingsUltraLeague)}'
                     )
                     `);
                 } catch (err) {
@@ -106,7 +108,8 @@ class Consumer {
                     id, pokemon_id, lat, lon, spawn_id, expire_timestamp, atk_iv, def_iv, sta_iv,
                     move_1, move_2, gender, form, cp, level, weather, costume, weight, size,
                     display_pokemon_id, pokestop_id, updated, first_seen_timestamp, changed, cell_id,
-                    expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3
+                    expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3,
+                    pvp_rankings_great_league, pvp_rankings_ultra_league
                 ) VALUES
                 `;
                 sqlUpdate += wildSQL.join(',');
@@ -142,7 +145,9 @@ class Consumer {
                     username=VALUES(username),
                     capture_1=VALUES(capture_1),
                     capture_2=VALUES(capture_2),
-                    capture_3=VALUES(capture_3)
+                    capture_3=VALUES(capture_3),
+                    pvp_rankings_great_league=VALUES(pvp_rankings_great_league),
+                    pvp_rankings_ultra_league=VALUES(pvp_rankings_ultra_league)                    
                 `;
                 try {
                     let result = await db.query(sqlUpdate);
@@ -222,7 +227,9 @@ class Consumer {
                         ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
-                        ${pokemon.capture3 || null}
+                        ${pokemon.capture3 || null},
+                        '${JSON.stringify(pokemon.pvpRankingsGreatLeague)}',
+                        '${JSON.stringify(pokemon.pvpRankingsUltraLeague)}'
                     )
                     `);
                 } catch (err) {
@@ -235,7 +242,8 @@ class Consumer {
                     id, pokemon_id, lat, lon, spawn_id, expire_timestamp, atk_iv, def_iv, sta_iv,
                     move_1, move_2, gender, form, cp, level, weather, costume, weight, size,
                     display_pokemon_id, pokestop_id, updated, first_seen_timestamp, changed, cell_id,
-                    expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3
+                    expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3,
+                    pvp_rankings_great_league, pvp_rankings_ultra_league
                 ) VALUES
                 `;
                 sqlUpdate += nearbySQL.join(',');
@@ -271,7 +279,9 @@ class Consumer {
                 username=VALUES(username),
                 capture_1=VALUES(capture_1),
                 capture_2=VALUES(capture_2),
-                capture_3=VALUES(capture_3)
+                capture_3=VALUES(capture_3),
+                pvp_rankings_great_league=VALUES(pvp_rankings_great_league),
+                pvp_rankings_ultra_league=VALUES(pvp_rankings_ultra_league)
                 `;
                 let result = await db.query(sqlUpdate);
                 //console.log('[Nearby] Result:', result.affectedRows);
@@ -334,6 +344,12 @@ class Consumer {
             // Check if old pokemon pokestop_id is set and new pokemon pokestop_id is not
             if (oldPokemon.pokestopId && !pokemon.pokestopId) {
                 pokemon.pokestopId = oldPokemon.pokestopId;
+            }
+            if (oldPokemon.pvpRankingsGreatLeague && !pokemon.pvpRankingsGreatLeague) {
+                pokemon.pvpRankingsGreatLeague = oldPokemon.pvpRankingsGreatLeague;
+            }
+            if (oldPokemon.pvpRankingsUltraLeague && !pokemon.pvpRankingsUltraLeague) {
+                pokemon.pvpRankingsUltraLeague = oldPokemon.pvpRankingsUltraLeague;
             }
             // Check if we need to update IV and old pokemon atk_id is not set and new pokemon atk_id is set
             if (updateIV && !oldPokemon.atkIv && pokemon.atkIv) {
@@ -958,7 +974,9 @@ class Consumer {
                         ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
-                        ${pokemon.capture3 || null}
+                        ${pokemon.capture3 || null},
+                        '${JSON.stringify(pokemon.pvpRankingsGreatLeague)}',
+                        '${JSON.stringify(pokemon.pvpRankingsUltraLeague)}'
                     )
                     `);
                 } catch (err) {
@@ -970,7 +988,8 @@ class Consumer {
                 id, pokemon_id, lat, lon, spawn_id, expire_timestamp, atk_iv, def_iv, sta_iv,
                 move_1, move_2, gender, form, cp, level, weather, costume, weight, size,
                 display_pokemon_id, pokestop_id, updated, first_seen_timestamp, changed, cell_id,
-                expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3
+                expire_timestamp_verified, shiny, username, capture_1, capture_2, capture_3,
+                pvp_rankings_great_league, pvp_rankings_ultra_league
             ) VALUES
             `;
             sqlUpdate += encountersSQL.join(',');
@@ -1006,7 +1025,9 @@ class Consumer {
                 username=VALUES(username),
                 capture_1=VALUES(capture_1),
                 capture_2=VALUES(capture_2),
-                capture_3=VALUES(capture_3)
+                capture_3=VALUES(capture_3),
+                pvp_rankings_great_league=VALUES(pvp_rankings_great_league),
+                pvp_rankings_ultra_league=VALUES(pvp_rankings_ultra_league)
             `;
             try {
                 let result = await db.query(sqlUpdate);
