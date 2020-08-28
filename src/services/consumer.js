@@ -94,8 +94,8 @@ class Consumer {
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
                         ${pokemon.capture3 || null},
-                        '${JSON.stringify(pokemon.pvpRankingsGreatLeague)}',
-                        '${JSON.stringify(pokemon.pvpRankingsUltraLeague)}'
+                        ${pokemon.pvpRankingsGreatLeague ? JSON.stringify(pokemon.pvpRankingsGreatLeague) : null},
+                        ${pokemon.pvpRankingsUltraLeague ? JSON.stringify(pokemon.pvpRankingsUltraLeague) : null}
                     )
                     `);
                 } catch (err) {
@@ -228,8 +228,8 @@ class Consumer {
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
                         ${pokemon.capture3 || null},
-                        '${JSON.stringify(pokemon.pvpRankingsGreatLeague)}',
-                        '${JSON.stringify(pokemon.pvpRankingsUltraLeague)}'
+                        ${pokemon.pvpRankingsGreatLeague ? JSON.stringify(pokemon.pvpRankingsGreatLeague) : null},
+                        ${pokemon.pvpRankingsUltraLeague ? JSON.stringify(pokemon.pvpRankingsUltraLeague) : null}
                     )
                     `);
                 } catch (err) {
@@ -975,8 +975,8 @@ class Consumer {
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
                         ${pokemon.capture3 || null},
-                        '${JSON.stringify(pokemon.pvpRankingsGreatLeague)}',
-                        '${JSON.stringify(pokemon.pvpRankingsUltraLeague)}'
+                        ${pokemon.pvpRankingsGreatLeague ? JSON.stringify(pokemon.pvpRankingsGreatLeague) : null},
+                        ${pokemon.pvpRankingsUltraLeague ? JSON.stringify(pokemon.pvpRankingsUltraLeague) : null}
                     )
                     `);
                 } catch (err) {

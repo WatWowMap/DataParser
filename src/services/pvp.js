@@ -162,13 +162,9 @@ class PvPStatsManager {
                     stats[new PokemonWithForm(pokemon, form)] = stat;
                 }
             }
-            //this.rankingGreatLock.lock()
-            //this.rankingUltraLock.lock()
             this.stats = stats;
             this.rankingGreat = {};//[:]
             this.rankingUltra = {};//[:]
-            //this.rankingGreatLock.unlock()
-            //this.rankingUltraLock.unlock()
             console.debug('[PVPStatsManager] Done parsing game master file');
         }).catch(err => {
             console.error('[PVPStatsManager] Failed to load game master file:', err);

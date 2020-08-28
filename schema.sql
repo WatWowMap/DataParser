@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS `gym` (
   `raid_pokemon_gender` tinyint(3) unsigned DEFAULT NULL,
   `sponsor_id` smallint(5) unsigned DEFAULT NULL,
   `raid_pokemon_costume` smallint(4) unsigned DEFAULT NULL,
+  `raid_pokemon_evolution` tinyint(1) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `ix_coords` (`lat`,`lon`),
   KEY `ix_raid_end_timestamp` (`raid_end_timestamp`),
