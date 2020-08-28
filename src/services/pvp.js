@@ -174,7 +174,7 @@ class PvPStatsManager {
 
     getPVPStats(pokemon, form, iv, level, league) {
         let stats = this.getTopPVP(pokemon, form, league);
-        if (stats.length === 0) {
+        if (!stats || stats.length === 0) {
             return null;
         }
         let index = stats.findIndex(value => {
@@ -206,6 +206,10 @@ class PvPStatsManager {
         let pokemonWithForm = new PokemonWithForm(pokemon, form);
         let result = [{ pokemonWithForm, current }];//[(pokemon: pokemonWithForm, response: current)]
         let stat = this.stats[pokemonWithForm];
+        if (!stat) {
+            // TODO: 
+            return null;
+        }
         if ((costume || '').toLowerCase().includes('noevolve') || stat.evolutions.length === 0) {
             return result
         }
@@ -216,34 +220,19 @@ class PvPStatsManager {
         return result;
     }
 
-    // swiftlint:disable:next cyclomatic_complexity
     getTopPVP(pokemon, form, league) {
         let info = new PokemonWithForm(pokemon, form);
         let cached;//: ResponsesOrEvent;
         switch (league) {
             case League.Great:
-                //this.rankingGreatLock.lock()
                 cached = this.rankingGreat[info];
-                //this.rankingGreatLock.unlock()
                 break;
             case League.Ultra:
-                //this.rankingUltraLock.lock()
                 cached = this.rankingUltra[info];
-                //this.rankingUltraLock.unlock()
                 break;
         }
 
         if (!cached) {
-            /*
-            switch (league) {
-                case League.Great:
-                    this.rankingGreatLock.lock();
-                    break;
-                case League.Ultra:
-                    this.rankingUltraLock.lock();
-                    break;
-            }
-            */
             let stats = this.stats[info];
             if (!stats) {
                 return null;
@@ -251,14 +240,10 @@ class PvPStatsManager {
             let values = this.getPVPValuesOrdered(stats, parseInt(league));
             switch (league) {
                 case League.Great:
-                    //this.rankingGreatLock.lock();
                     this.rankingGreat[info] = values;
-                    //this.rankingGreatLock.unlock();
                     break;
                 case League.Ultra:
-                    //this.rankingUltraLock.lock();
                     this.rankingUltra[info] = values;
-                    //this.rankingUltraLock.unlock();
                     break;
             }
 
@@ -291,7 +276,6 @@ class PvPStatsManager {
             }
         }
         //ranking.sort((x, y) => x >= y);
-        //return ranking.map(x => x.value);
         return Object.values(ranking).map(x => x.value);
         /*
         return ranking.sorted { (lhs, rhs) -> Bool in

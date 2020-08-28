@@ -49,6 +49,7 @@ class Gym {
             this.raidPokemonForm = 0;
             this.raidPokemonGender = 0;
             this.raidPokemonCostume = 0; // TODO:
+            this.raidPokemonEvolution = null;
             if (data.fort.raid_info) {
                 this.raidEndTimestamp = data.fort.raid_info.raid_end_ms / 1000;
                 this.raidSpawnTimestamp = data.fort.raid_info.raid_spawn_ms / 1000;
@@ -62,10 +63,9 @@ class Gym {
                     this.raidPokemonCp = data.fort.raid_info.raid_pokemon.cp;
                     this.raidPokemonForm = data.fort.raid_info.raid_pokemon.pokemon_display.form;
                     this.raidPokemonGender = data.fort.raid_info.raid_pokemon.pokemon_display.gender;
+                    // TODO: VV Double check
                     if (data.fort.raid_info.raid_pokemon.pokemon_display.pokemon_evolution) {
-                        this.raidPokemonEvolution = data.fort.raid_info.pokemon_display.pokemon_evolution;
-                    } else {
-                        this.raidPokemonEvolution = null;
+                        this.raidPokemonEvolution = data.fort.raid_info.raid_pokemon.pokemon_display.pokemon_evolution;
                     }
                 }
             }
@@ -105,6 +105,7 @@ class Gym {
             this.deleted = data.deleted || 0;
             this.firstSeenTimestamp = data.first_seen_timestamp;
             this.sponsorId = data.sponsor_id || null;
+            this.raidPokemonEvolution = data.raid_pokemon_evolution || null;
         }
     }
 
@@ -120,7 +121,7 @@ class Gym {
                    raid_spawn_timestamp, raid_battle_timestamp, raid_pokemon_id, enabled, availble_slots, updated,
                    raid_level, ex_raid_eligible, in_battle, raid_pokemon_move_1, raid_pokemon_move_2, raid_pokemon_form,
                    raid_pokemon_costume, raid_pokemon_cp, raid_pokemon_gender, raid_is_exclusive, cell_id, total_cp,
-                   sponsor_id
+                   sponsor_id, raid_pokemon_evolution
             FROM gym
             WHERE id = ? ${withDeletedSQL}
         `;
@@ -197,6 +198,7 @@ class Gym {
                         ex_raid_eligible: this.exRaidEligible || 0,
                         is_exclusive: this.raidIsExclusive || false,
                         sponsor_id: this.sponsorId || 0,
+                        evolution: this.raidPokemonEvolution || null
                     }
                 };
         }

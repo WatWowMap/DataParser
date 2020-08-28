@@ -471,7 +471,8 @@ class Consumer {
                                 ${gym.totalCp},
                                 ${gym.firstSeenTimestamp},
                                 ${gym.raidPokemonGender},
-                                ${gym.sponsorId}
+                                ${gym.sponsorId},
+                                ${gym.raidPokemonEvolution}
                             )
                             `);
                             if (!this.gymIdsPerCell[fort.cell]) {
@@ -530,7 +531,7 @@ class Consumer {
                     id, lat, lon, name, url, last_modified_timestamp, raid_end_timestamp, raid_spawn_timestamp, raid_battle_timestamp, 
                     updated, raid_pokemon_id, guarding_pokemon_id, availble_slots, team_id, raid_level, enabled, ex_raid_eligible, 
                     in_battle, raid_pokemon_move_1, raid_pokemon_move_2, raid_pokemon_form, raid_pokemon_cp, raid_is_exclusive, 
-                    cell_id, deleted, total_cp, first_seen_timestamp, raid_pokemon_gender, sponsor_id
+                    cell_id, deleted, total_cp, first_seen_timestamp, raid_pokemon_gender, sponsor_id, raid_pokemon_evolution
                 ) VALUES
                 `;
                 sqlUpdate += gymsSQL.join(',');
@@ -564,7 +565,8 @@ class Consumer {
                     total_cp=VALUES(total_cp),
                     first_seen_timestamp=VALUES(first_seen_timestamp),
                     raid_pokemon_gender=VALUES(raid_pokemon_gender),
-                    sponsor_id=VALUES(sponsor_id)
+                    sponsor_id=VALUES(sponsor_id),
+                    raid_pokemon_evolution=VALUES(raid_pokemon_evolution)
                 `;
                 let result = await db.query(sqlUpdate);
                 //console.log('[Gym] Result:', result.affectedRows);
