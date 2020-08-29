@@ -1,12 +1,21 @@
+![Node.js CI](https://github.com/versx/DataParser/workflows/Node.js%20CI/badge.svg)
 # DataParser  
 
 Raw data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/RealDeviceMap) `/raw` endpoint  
+
+## Prerequisites  
+- MySQL/MariaDB database server  
 
 ## Installation  
 1.) Clone repository `git clone --recursive https://github.com/versx/DataParser`  
 2.) Install dependencies `npm install`  
 3.) Copy config `cp src/config.example.json src/config.json`  
 4.) Fill out config `vi src/config.json` (listening port, instances, db info, etc)  
-5.) Run `schema.sql` against a fresh database to create the tables  
-6.) Run `npm start`  
+5.) Create PvP stat tables, run `npm create-pvp-tables`  
+6.) Run `npm start` (Database tables will be created if they don't exist)  
 7.) Point `data_endpoint` config property in [DeviceConfigManager](https://github.com/versx/DeviceConfigManager) to `http://dataparser_ip:9001`  
+
+## Updating  
+1.) `git pull`  
+2.) `git submodule update`  
+3.) `npm install`  
