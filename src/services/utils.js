@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('fs');
+
 /**
  * Base64 decodes the string to raw data.
  * @param {*} data 
@@ -15,7 +17,24 @@ const sendResponse = (res, status, data) => {
     });
 };
 
+const snooze = async (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+};
+
+const readFile = async (path, encoding = 'utf8') => {
+    return new Promise((resolve, reject) => {
+        fs.readFile(path, (err, data) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(data.toString(encoding));
+        });
+    });
+};
+
 module.exports = {
     base64_decode,
-    sendResponse
+    sendResponse,
+    snooze,
+    readFile
 };
