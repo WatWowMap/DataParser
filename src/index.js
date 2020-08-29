@@ -15,18 +15,18 @@ const instances = config.clusters || 4;
 // TODO: Loop redis insert into mysql
 
 const run = async () => {
-    // Start database migrator
-    const dbMigrator = new Migrator();
-    await dbMigrator.load();
-
-    // Wait until migrations are done to proceed
-    while (!dbMigrator.done) {
-        await utils.snooze(1000);
-    }
-
     if (cluster.isMaster) {
         console.log(`[Cluster] Master ${process.pid} is running`);
-    
+
+        // Start database migrator
+        const dbMigrator = new Migrator();
+        await dbMigrator.load();
+
+        // Wait until migrations are done to proceed
+        while (!dbMigrator.done) {
+            await utils.snooze(1000);
+        }
+        
         // Fork workers
         for (let i = 0; i < instances; i++) {
             cluster.fork();
