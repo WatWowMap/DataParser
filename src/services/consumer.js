@@ -446,8 +446,8 @@ class Consumer {
                                 '${gym.id}',
                                 ${gym.lat},
                                 ${gym.lon},
-                                ${gym.name ? '\'' + gym.name + '\'' : null},
-                                ${gym.url ? '\'' + gym.url + '\'' : null},
+                                ${gym.name ? '"' + gym.name + '"' : null},
+                                ${gym.url ? '"' + gym.url + '"' : null},
                                 ${gym.lastModifiedTimestamp},
                                 ${gym.raidEndTimestamp},
                                 ${gym.raidSpawnTimestamp},
@@ -491,8 +491,8 @@ class Consumer {
                                 '${pokestop.id}',
                                 ${pokestop.lat},
                                 ${pokestop.lon},
-                                ${pokestop.name ? '\'' + pokestop.name + '\'' : null},
-                                ${pokestop.url ? '\'' + pokestop.url + '\'' : null},
+                                ${pokestop.name ? '"' + pokestop.name + '"' : null},
+                                ${pokestop.url ? '"' + pokestop.url + '"' : null},
                                 ${pokestop.lureExpireTimestamp},
                                 ${pokestop.lastModifiedTimestamp},
                                 ${pokestop.updated},
@@ -780,7 +780,7 @@ class Consumer {
                     let id = info.gym_status_and_defenders.pokemon_fort_proto.id;
                     let lat = info.gym_status_and_defenders.pokemon_fort_proto.latitude;
                     let lon = info.gym_status_and_defenders.pokemon_fort_proto.longitude;
-                    gymInfosSQL.push(`('${id}', ${lat}, ${lon}, '${name}', '${url}', UNIX_TIMESTAMP(), UNIX_TIMESTAMP())`);
+                    gymInfosSQL.push(`('${id}', ${lat}, ${lon}, "${name}", "${url}", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())`);
                 } catch (err) {
                     console.error('[GymInfos] Error:', err);
                 }
