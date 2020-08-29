@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "import": "node src/import.js",
+    "create-pvp-tables": "node static/PvPRank.js",
     "test": "npx eslint src/**/*.js",
     "test-fix": "npx eslint src/**/*.js --fix"
   },
