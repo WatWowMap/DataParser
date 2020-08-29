@@ -7,7 +7,8 @@ const Cell = require('./cell.js');
 const Pokestop = require('./pokestop.js');
 const Spawnpoint = require('./spawnpoint.js');
 const MySQLConnector = require('../services/mysql.js');
-const { PvPStatsManager, IV, League } = require('../services/pvp.js');
+//const { PvPStatsManager, IV, League } = require('../services/pvp.js');
+const pvp = require('../services/pvp.js');
 const db = new MySQLConnector(config.db);
 
 class Pokemon {
@@ -278,6 +279,7 @@ class Pokemon {
             }
         }
 
+        /*
         let pvpGreat = PvPStatsManager.instance.getPVPStatsWithEvolutions(
             encounter.wild_pokemon.pokemon_data.pokemon_id,
             this.form ? this.form : null,
@@ -286,21 +288,22 @@ class Pokemon {
             parseFloat(this.level),
             League.Great
         );
+        */
+        let pvpGreat = await pvp.calculatePossibleCPs(this.pokemonId, this.form, this.atkIv, this.defIv, this.staIv, this.level, null, 'great');
         if (pvpGreat && pvpGreat.length > 0) {
             this.pvpRankingsGreatLeague = pvpGreat.map(ranking => {
-                if (ranking.current) {
-                    return {
-                        "pokemon": ranking.pokemonWithForm.pokemon,
-                        "form": ranking.pokemonWithForm.form || 0,
-                        "rank": ranking.current.rank,
-                        "percentage": ranking.current.percentage,
-                        "cp": ranking.current.ivs[0].cp,
-                        "level": ranking.current.ivs[0].level
-                    };
-                }
+                return {
+                    "pokemon": ranking.pokemon_id,
+                    "form": ranking.form_id || 0,
+                    "rank": ranking.rank,
+                    "percentage": ranking.percent,
+                    "cp": ranking.cp,
+                    "level": ranking.level
+                };
             });
         }
 
+        /*
         let pvpUltra = PvPStatsManager.instance.getPVPStatsWithEvolutions(
             encounter.wild_pokemon.pokemon_data.pokemon_id,
             this.form ? this.form : null,
@@ -309,18 +312,18 @@ class Pokemon {
             parseFloat(this.level),
             League.Ultra
         );
+        */
+        let pvpUltra = await pvp.calculatePossibleCPs(this.pokemonId, this.form, this.atkIv, this.defIv, this.staIv, this.level, null, 'ultra');
         if (pvpUltra && pvpUltra.length > 0) {
             this.pvpRankingsUltraLeague = pvpUltra.map(ranking => {
-                if (ranking.current) {
-                    return {
-                        "pokemon": ranking.pokemonWithForm.pokemon,
-                        "form": ranking.pokemonWithForm.form || 0,
-                        "rank": ranking.current.rank,
-                        "percentage": ranking.current.percentage,
-                        "cp": ranking.current.ivs[0].cp,
-                        "level": ranking.current.ivs[0].level
-                    };
-                }
+                return {
+                    "pokemon": ranking.pokemon_id,
+                    "form": ranking.form_id || 0,
+                    "rank": ranking.rank,
+                    "percentage": ranking.percent,
+                    "cp": ranking.cp,
+                    "level": ranking.level
+                };
             });
         }
 

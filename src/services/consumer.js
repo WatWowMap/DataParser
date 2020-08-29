@@ -977,8 +977,8 @@ class Consumer {
                         ${pokemon.capture1 || null},
                         ${pokemon.capture2 || null},
                         ${pokemon.capture3 || null},
-                        ${pokemon.pvpRankingsGreatLeague ? JSON.stringify(pokemon.pvpRankingsGreatLeague) : null},
-                        ${pokemon.pvpRankingsUltraLeague ? JSON.stringify(pokemon.pvpRankingsUltraLeague) : null}
+                        ${pokemon.pvpRankingsGreatLeague ? "'" + JSON.stringify(pokemon.pvpRankingsGreatLeague) + "'" : null},
+                        ${pokemon.pvpRankingsUltraLeague ? "'" + JSON.stringify(pokemon.pvpRankingsUltraLeague) + "'" : null}
                     )
                     `);
                 } catch (err) {
@@ -1035,7 +1035,7 @@ class Consumer {
                 let result = await db.query(sqlUpdate);
                 //console.log('[Encounter] Result:', result.affectedRows);
             } catch (err) {
-                //console.error('encounter error:', err.message);
+                console.error('[Encounter] Error:', err.message);
             }
         }
     }
