@@ -420,7 +420,7 @@ class Pokemon {
                 first_seen: this.firstSeenTimestamp || 1,
                 last_modified_time: this.updated || 1,
                 gender: this.gender,
-                cp: this.cp,
+                cp: this.cp || null,
                 form: this.form,
                 costume: this.costume,
                 individual_attack: this.atkIv,

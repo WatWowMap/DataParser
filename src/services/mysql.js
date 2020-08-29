@@ -4,7 +4,6 @@ const mysql = require('mysql');
 const config = require('../config.json');
 
 const pool  = mysql.createPool({
-    connectionLimit  : 10,
     host             : config.db.host,
     port             : config.db.port,
     user             : config.db.username,
