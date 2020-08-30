@@ -11,7 +11,7 @@ const pool  = mysql.createPool({
     database         : config.db.database,
     charset          : config.db.charset,
     supportBigNumbers: true,
-    connectionLimit  : 1000,
+    connectionLimit  : config.db.connectionLimit,
     //connectTimeout   : 15 * 1000,
     //acquireTimeout   : 15 * 1000,
     //timeout          : 15 * 1000
@@ -51,7 +51,7 @@ class MySQLConnector {
                     if (error) {
                         return reject(error);
                     }
-                    resolve(results);
+                    return resolve(results);
                 });
             });
         });

@@ -6,6 +6,27 @@ const db = new MySQLConnector(config.db);
 //const cpMultipliers = require('../../static/cp_multiplier.json');
 const masterfile = require('../../static/masterfile.json');
 
+const redis = require('redis');
+const redisOptions = {
+    host: config.redis.host,
+    port: config.redis.port,
+    //string_numbers: true,
+    //socket_keepalive: true,
+    //password: '',
+    //db: null,
+    tls: false
+};
+if (config.redis.password) {
+    redisOptions.password = config.redis.password;
+}
+const client = redis.createClient(redisOptions);
+client.on('connect', () => {
+    console.log('[Redis] Connected');
+});
+client.on('error', (error) => {
+    console.error('[Redis] Error:', error);
+});
+
 /*
 function calculateCP(pokemonId, formId, attack , defense, stamina, level) {
     let cp = 0;
@@ -197,7 +218,7 @@ async function calculatePossibleCPs(pokemonId, formId, attack, defense, stamina,
         let evolvedForm;
         for (let i = 0; i < masterfile.pokemon[pokemonId].evolutions.length; i++) {
             // Check for Evolution Form
-            if (formId > 0){
+            if (formId > 0) {
                 if (!masterfile.pokemon[pokemonId].forms[formId]) {
                     evolvedForm = masterfile.pokemon[masterfile.pokemon[pokemonId].evolutions[i]].default_form;
                 } else {
@@ -223,32 +244,17 @@ async function queryPvPRank(pokemonId, formId, attack, defense, stamina, level, 
             !masterfile.pokemon[pokemonId].forms[formId].attack) {
             form = 0;
         }
-        let pvpLeague = league + '_league';
-        let sql = `
-        SELECT * FROM ${pvpLeague}
-        WHERE pokemon_id = ${pokemonId}
-            AND form = ${form}
-            AND attack = ${attack}
-            AND defense = ${defense}
-            AND stamina = ${stamina}
-            AND level >= ${level}
-        `;
-        await db.query(sql, async (error, results) => {
-            if (error || results.length == 0) {
+        const key = `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`;
+        client.hget(league + '_league', key, (err, reply) => {
+            if (err) {
+                console.error('[Redis] Error:', err);
                 return resolve(null);
             }
-            return resolve({
-                pokemon_id: pokemonId,
-                form_id: formId,
-                attack: attack,
-                defense: defense,
-                stamina: stamina,
-                level: results[0].level,
-                cp: results[0].cp,
-                percent: results[0].percent,
-                rank: results[0].rank,
-                pvp_value: results[0].value
-            });
+            if (!reply) {
+                return resolve(null);
+            }
+            let obj = JSON.parse(reply);
+            return resolve(obj);
         });
     });
 }

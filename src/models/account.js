@@ -184,6 +184,33 @@ class Account {
         //console.log('[Account] SetLevel:', result);
     }
 
+    toSql() {
+        return `
+        (
+            '${this.username}',
+            '${this.password}',
+            ${this.firstWarningTimestamp},                        
+            ${this.failedTimestamp},
+            ${this.failed},
+            ${this.level},
+            ${this.last_encounter_lat},
+            ${this.last_encounter_lon},
+            ${this.last_encounter_time},
+            ${this.spins},
+            ${this.tutorial},
+            ${this.creationTimestampMs},
+            ${this.warn},
+            ${this.warnExpireMs},
+            ${this.warnMessageAcknowledged},
+            ${this.suspendedMessageAcknowledged},
+            ${this.wasSuspended},
+            ${this.banned},
+            ${this.creationTimestamp},
+            ${this.warnExpireTimestamp}
+        )
+        `;
+    }
+
     /**
      * Save account.
      * @param update 

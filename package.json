@@ -26,7 +26,8 @@
     "moment": "^2.27.0",
     "mysql": "^2.18.1",
     "nodes2ts": "^2.0.0",
-    "pogo-protos": "file:pogo-protos",
+    "pogo-protos": "https://github.com/Furtif/pogo-protos.git",
+    "redis": "^3.0.2",
     "s2-geometry": "^1.2.10"
   }
 }

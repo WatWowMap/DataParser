@@ -10,7 +10,6 @@ const utils = require('./services/utils.js');
 const WebhookController = require('./services/webhook.js');
 const instances = config.clusters || 4;
 
-// TODO: Use redis for PvP tables
 // TODO: Add raw proto to redis
 // TODO: Loop redis insert into mysql
 

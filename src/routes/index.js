@@ -10,6 +10,16 @@ const { sendResponse, base64_decode } = require('../services/utils.js');
 
 const Consumer = require('../services/consumer.js');
 
+const RpcMethod = {
+    GetPlayerResponse: 2,
+    GetHoloInventoryResponse: 4,
+    FortSearchResponse: 101,
+    EncounterResponse: 102,
+    FortDetailsResponse: 104,
+    GetMapObjectsResponse: 106,
+    GymGetInfoResponse: 156
+};
+
 class RouteController {
 
     constructor() {
@@ -93,7 +103,7 @@ class RouteController {
             }
     
             switch (method) {
-                case 2: // GetPlayerResponse
+                case RpcMethod.GetPlayerResponse:
                     try {
                         let gpr = POGOProtos.Networking.Responses.GetPlayerResponse.decode(base64_decode(data));
                         if (gpr) {
@@ -110,10 +120,10 @@ class RouteController {
                         console.error('[Raw] Unable to decode GetPlayerResponse');
                     }
                     break;
-                case 4: // GetHoloInventoryResponse
+                case RpcMethod.GetHoloInventoryResponse:
                     // TODO: Parse GetHoloInventoryResponse
                     break;
-                case 101: // FortSearchResponse
+                case RpcMethod.FortSearchResponse:
                     try {
                         let fsr = POGOProtos.Networking.Responses.FortSearchResponse.decode(base64_decode(data));
                         if (fsr) {
@@ -129,7 +139,7 @@ class RouteController {
                         console.error('[Raw] Unable to decode FortSearchResponse');
                     }
                     break;
-                case 102: // EncounterResponse
+                case RpcMethod.EncounterResponse:
                     if (trainerLevel >= 30 || isMadData !== false) {
                         try {
                             let er = POGOProtos.Networking.Responses.EncounterResponse.decode(base64_decode(data));
@@ -143,7 +153,7 @@ class RouteController {
                         }
                     }
                     break;
-                case 104: // FortDetailsResponse
+                case RpcMethod.FortDetailsResponse:
                     try {
                         let fdr = POGOProtos.Networking.Responses.FortDetailsResponse.decode(base64_decode(data));
                         if (fdr) {
@@ -155,7 +165,7 @@ class RouteController {
                         console.error('[Raw] Unable to decode FortDetailsResponse');
                     }
                     break;
-                case 106: // GetMapObjectsResponse
+                case RpcMethod.GetMapObjectsResponse:
                     containsGMO = true;
                     try {
                         let gmo = POGOProtos.Networking.Responses.GetMapObjectsResponse.decode(base64_decode(data));
@@ -227,7 +237,7 @@ class RouteController {
                         console.error('[Raw] Unable to decode GetMapObjectsResponse');
                     }
                     break;
-                case 156: // GymGetInfoResponse
+                case RpcMethod.GymGetInfoResponse:
                     try {
                         let ggi = POGOProtos.Networking.Responses.GymGetInfoResponse.decode(base64_decode(data));
                         if (ggi) {
@@ -240,7 +250,7 @@ class RouteController {
                     }
                     break;
                 default:
-                    console.error('[Raw] Invalid method provided:', method);
+                    console.error('[Raw] Invalid method or data provided:', method, data);
                     return;
             }
         }

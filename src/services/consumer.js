@@ -1,6 +1,5 @@
 'use strict';
 
-const moment = require('moment');
 const S2 = require('nodes2ts');
 
 const config = require('../config.json');
@@ -15,7 +14,6 @@ const WebhookController = require('../services/webhook.js');
 const Weather = require('../models/weather');
 const db = new MySQLConnector(config.db);
 
-// TODO: Break out class into model classes
 
 class Consumer {
 
@@ -39,7 +37,7 @@ class Consumer {
                         timestampMs: wild.timestamp_ms,
                         wild: wild.data
                     });
-                    await this.updatePokemonValues(pokemon);
+                    await pokemon.update();
         
                     if (!pokemon.lat && pokemon.pokestopId) {
                         if (!pokemon.pokestopId) {
@@ -61,43 +59,7 @@ class Consumer {
                     if (!pokemon.firstSeenTimestamp) {
                         pokemon.firstSeenTimestamp = new Date().getTime() / 1000;
                     }
-                    wildSQL.push(`
-                    (
-                        ${pokemon.id},
-                        ${pokemon.pokemonId},
-                        ${pokemon.lat},
-                        ${pokemon.lon},
-                        ${pokemon.spawnId || null},
-                        ${pokemon.expireTimestamp || null},
-                        ${pokemon.atkIv || null},
-                        ${pokemon.defIv || null},
-                        ${pokemon.staIv || null},
-                        ${pokemon.move1 || null},
-                        ${pokemon.move2 || null},
-                        ${pokemon.gender},
-                        ${pokemon.form},
-                        ${pokemon.cp || null},
-                        ${pokemon.level || null},
-                        ${pokemon.weather || 0},
-                        ${pokemon.costume || 0},
-                        ${pokemon.weight || null},
-                        ${pokemon.size || null},
-                        ${pokemon.displayPokemonId || null},
-                        ${pokemon.pokestopId ? '\'' + pokemon.pokestopId + '\'' : null},
-                        ${pokemon.updated || null},
-                        ${pokemon.firstSeenTimestamp || null},
-                        ${pokemon.changed || null},
-                        ${pokemon.cellId || null},
-                        ${pokemon.expireTimestampVerified || 0},
-                        ${pokemon.shiny || null},
-                        ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
-                        ${pokemon.capture1 || null},
-                        ${pokemon.capture2 || null},
-                        ${pokemon.capture3 || null},
-                        ${pokemon.pvpRankingsGreatLeague ? JSON.stringify(pokemon.pvpRankingsGreatLeague) : null},
-                        ${pokemon.pvpRankingsUltraLeague ? JSON.stringify(pokemon.pvpRankingsUltraLeague) : null}
-                    )
-                    `);
+                    wildSQL.push(pokemon.toSql());
                 } catch (err) {
                     console.error('[Wild] Error:', err);
                 }
@@ -170,7 +132,7 @@ class Consumer {
                         //timestampMs: nearbyPokemon.timestamp_ms,
                         nearby: nearby.data
                     });
-                    await this.updatePokemonValues(pokemon);
+                    await pokemon.update();
         
                     if (!pokemon.lat && pokemon.pokestopId) {
                         if (!pokemon.pokestopId) {
@@ -195,43 +157,7 @@ class Consumer {
                     if (!pokemon.firstSeenTimestamp) {
                         pokemon.firstSeenTimestamp = new Date().getTime() / 1000;
                     }
-                    nearbySQL.push(`
-                    (
-                        ${pokemon.id},
-                        ${pokemon.pokemonId},
-                        ${pokemon.lat || null},
-                        ${pokemon.lon || null},
-                        ${pokemon.spawnId || null},
-                        ${pokemon.expireTimestamp || null},
-                        ${pokemon.atkIv || null},
-                        ${pokemon.defIv || null},
-                        ${pokemon.staIv || null},
-                        ${pokemon.move1 || null},
-                        ${pokemon.move2 || null},
-                        ${pokemon.gender},
-                        ${pokemon.form},
-                        ${pokemon.cp || null},
-                        ${pokemon.level || null},
-                        ${pokemon.weather || 0},
-                        ${pokemon.costume || 0},
-                        ${pokemon.weight || null},
-                        ${pokemon.size || null},
-                        ${pokemon.displayPokemonId || null},
-                        ${pokemon.pokestopId ? '\'' + pokemon.pokestopId + '\'' : null},
-                        ${pokemon.updated || null},
-                        ${pokemon.firstSeenTimestamp || null},
-                        ${pokemon.changed || null},
-                        ${pokemon.cellId || null},
-                        ${pokemon.expireTimestampVerified || 0},
-                        ${pokemon.shiny || null},
-                        ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
-                        ${pokemon.capture1 || null},
-                        ${pokemon.capture2 || null},
-                        ${pokemon.capture3 || null},
-                        ${pokemon.pvpRankingsGreatLeague ? JSON.stringify(pokemon.pvpRankingsGreatLeague) : null},
-                        ${pokemon.pvpRankingsUltraLeague ? JSON.stringify(pokemon.pvpRankingsUltraLeague) : null}
-                    )
-                    `);
+                    nearbySQL.push(pokemon.toSql());
                 } catch (err) {
                     console.error('[Nearby] Error:', err);
                 }
@@ -289,144 +215,6 @@ class Consumer {
         }
     }
 
-    async updatePokemonValues(pokemon) {
-        let updateIV = false;
-        let now = new Date().getTime() / 1000;
-        pokemon.updated = now;
-        let oldPokemon;
-        try {
-            oldPokemon = await Pokemon.getById(pokemon.id);
-        } catch (err) {
-            oldPokemon = null;
-        }
-        // First time seeing pokemon
-        if (!oldPokemon) {
-            // Check if expire timestamp set
-            if (!pokemon.expireTimestamp) {
-                pokemon.expireTimestamp = now + Pokemon.PokemonTimeUnseen;
-            }
-            // Set first seen timestamp
-            pokemon.firstSeenTimestamp = pokemon.updated;
-        } else {
-            // Pokemon was seen before, set first seen timestamp to original
-            pokemon.firstSeenTimestamp = oldPokemon.firstSeenTimestamp;
-            // Check if expire timestamp set
-            if (!pokemon.expireTimestamp) {
-                // Check if pokemon that doesn't havea a known despawn time was reseen, if so add time to expire timestamp
-                let oldExpireDate = oldPokemon.expireTimestamp;
-                if ((oldExpireDate - now) < Pokemon.PokemonTimeReseen) {
-                    pokemon.expireTimestamp = now + Pokemon.PokemonTimeReseen;
-                } else {
-                    pokemon.expireTimestamp = oldPokemon.expireTimestamp;
-                }
-            }
-            if (!pokemon.expireTimestampVerified && oldPokemon.expireTimestampVerified) {
-                pokemon.expireTimestampVerified = oldPokemon.expireTimestampVerified;
-                pokemon.expireTimestamp = oldPokemon.expireTimestamp;
-            }
-            if (oldPokemon.pokemonId !== pokemon.pokemonId) {
-                if (oldPokemon.pokemonId !== Pokemon.DittoPokemonId) {
-                    console.log('[POKEMON] Pokemon', pokemon.id, 'changed from', oldPokemon.pokemonId, 'to', pokemon.pokemonId);
-                } else if (oldPokemon.displayPokemonId || 0 !== pokemon.pokemonId) {
-                    console.log('[POKEMON] Pokemon', pokemon.id, 'Ditto diguised as', (oldPokemon.displayPokemonId || 0), 'now seen as', pokemon.pokemonId);
-                }
-            }
-            // Check if old pokemon cell_id is set and new pokemon cell_id is not
-            if (oldPokemon.cellId && !pokemon.cellId) {
-                pokemon.cellId = oldPokemon.cellId;
-            }
-            // Check if old pokemon spawn_id is set and new pokemon spawn_id is not
-            if (oldPokemon.spawnId && !pokemon.spawnId) {
-                pokemon.spawnId = oldPokemon.spawnId;
-                pokemon.lat = oldPokemon.lat;
-                pokemon.lon = oldPokemon.lon;
-            }
-            // Check if old pokemon pokestop_id is set and new pokemon pokestop_id is not
-            if (oldPokemon.pokestopId && !pokemon.pokestopId) {
-                pokemon.pokestopId = oldPokemon.pokestopId;
-            }
-            if (oldPokemon.pvpRankingsGreatLeague && !pokemon.pvpRankingsGreatLeague) {
-                pokemon.pvpRankingsGreatLeague = oldPokemon.pvpRankingsGreatLeague;
-            }
-            if (oldPokemon.pvpRankingsUltraLeague && !pokemon.pvpRankingsUltraLeague) {
-                pokemon.pvpRankingsUltraLeague = oldPokemon.pvpRankingsUltraLeague;
-            }
-            // Check if we need to update IV and old pokemon atk_id is not set and new pokemon atk_id is set
-            if (updateIV && !oldPokemon.atkIv && pokemon.atkIv) {
-                WebhookController.instance.addPokemonEvent(pokemon.toJson());
-                //InstanceController.instance.gotIV(this);
-                pokemon.changed = now;
-            } else {
-                pokemon.changed = oldPokemon.changed || now;
-            }
-
-            // Check if old pokemon cell_id is set and new pokemon cell_id is not
-            if (updateIV && oldPokemon.atkIv && !pokemon.atkIv) {
-                // Weather or spawn change
-                if (
-                    !((!oldPokemon.weather || oldPokemon.weather === 0) && (pokemon.weather || 0 > 0) ||
-                        (!pokemon.weather || pokemon.weather === 0) && (oldPokemon.weather || 0 > 0))
-                ) {
-                    pokemon.atkIv = oldPokemon.atkIv;
-                    pokemon.defIv = oldPokemon.defIv;
-                    pokemon.staIv = oldPokemon.staIv;
-                    pokemon.cp = oldPokemon.cp;
-                    pokemon.weight = oldPokemon.weight;
-                    pokemon.size = oldPokemon.size;
-                    pokemon.move1 = oldPokemon.move1;
-                    pokemon.move2 = oldPokemon.move2;
-                    pokemon.level = oldPokemon.level;
-                    pokemon.shiny = oldPokemon.shiny;
-                    pokemon.isDitto = Pokemon.isDittoDisguisedFromPokemon(oldPokemon);
-                    if (pokemon.isDitto) {
-                        console.log('[POKEMON] oldPokemon', pokemon.id, 'Ditto found, disguised as', pokemon.pokemonId);
-                        pokemon.setDittoAttributes(pokemon.pokemonId);
-                    }
-                }
-            }
-
-            //let shouldWrite = Pokemon.shouldUpdate(oldPokemon, pokemon);
-            //if (!shouldWrite) {
-            //    return;
-            //}
-
-            if (oldPokemon.pokemonId === Pokemon.DittoPokemonId && pokemon.pokemonId !== Pokemon.DittoPokemonId) {
-                console.log('[POKEMON] Pokemon', pokemon.id, 'Ditto changed from', oldPokemon.pokemonId, 'to', pokemon.pokemonId);
-            }
-        }
-
-        // Known spawn_id, check for despawn time
-        if (pokemon.spawnId) {
-            let spawnpoint;
-            let secondOfHour = null;
-            if (pokemon.expireTimestampVerified && pokemon.expireTimestamp) {
-                let date = moment(pokemon.expireTimestamp).format('mm:ss');
-                let split = date.split(':');
-                let minute = parseInt(split[0]);
-                let second = parseInt(split[1]);
-                secondOfHour = second + minute * 60;
-            }
-            spawnpoint = new Spawnpoint(
-                pokemon.spawnId,
-                pokemon.lat,
-                pokemon.lon,
-                secondOfHour,
-                pokemon.updated
-            );
-            try {
-                await spawnpoint.save(true);
-            } catch (err) {
-                console.error('[Spawnpoint] Error:', err);
-            }
-        }
-
-        // First time seeing Pokemon, send webhook
-        if (!oldPokemon) {
-            WebhookController.instance.addPokemonEvent(pokemon.toJson());
-        }
-
-    }
-
     async updateForts(forts) {
         if (forts.length > 0) {
             let gymsSQL = [];
@@ -440,41 +228,9 @@ class Consumer {
                                 cellId: fort.cell,
                                 fort: fort.data
                             });
-                            await this.updateGymValues(gym);
-                            gymsSQL.push(`
-                            (
-                                '${gym.id}',
-                                ${gym.lat},
-                                ${gym.lon},
-                                ${gym.name ? '"' + gym.name + '"' : null},
-                                ${gym.url ? '"' + gym.url + '"' : null},
-                                ${gym.lastModifiedTimestamp},
-                                ${gym.raidEndTimestamp},
-                                ${gym.raidSpawnTimestamp},
-                                ${gym.raidBattleTimestamp},
-                                ${gym.updated},
-                                ${gym.raidPokemonId},
-                                ${gym.guardingPokemonId},
-                                ${gym.availableSlots},
-                                ${gym.teamId},
-                                ${gym.raidLevel},
-                                ${gym.enabled},
-                                ${gym.exRaidEligible},
-                                ${gym.inBattle},
-                                ${gym.raidPokemonMove1},
-                                ${gym.raidPokemonMove2},
-                                ${gym.raidPokemonForm},
-                                ${gym.raidPokemonCp},
-                                ${gym.raidIsExclusive},
-                                ${gym.cellId},
-                                ${gym.deleted},
-                                ${gym.totalCp},
-                                ${gym.firstSeenTimestamp},
-                                ${gym.raidPokemonGender},
-                                ${gym.sponsorId},
-                                ${gym.raidPokemonEvolution}
-                            )
-                            `);
+                            await gym.update();
+                            gymsSQL.push(gym.toSql());
+
                             if (!this.gymIdsPerCell[fort.cell]) {
                                 this.gymIdsPerCell[fort.cell] = [];
                             }
@@ -485,36 +241,9 @@ class Consumer {
                                 cellId: fort.cell,
                                 fort: fort.data
                             });
-                            await this.updatePokestopValues(pokestop, false);
-                            pokestopsSQL.push(`
-                            (
-                                '${pokestop.id}',
-                                ${pokestop.lat},
-                                ${pokestop.lon},
-                                ${pokestop.name ? '"' + pokestop.name + '"' : null},
-                                ${pokestop.url ? '"' + pokestop.url + '"' : null},
-                                ${pokestop.lureExpireTimestamp},
-                                ${pokestop.lastModifiedTimestamp},
-                                ${pokestop.updated},
-                                ${pokestop.enabled},
+                            await pokestop.update(false);
+                            pokestopsSQL.push(pokestop.toSql('pokestop'));
 
-                                ${pokestop.cellId},
-                                ${pokestop.deleted},
-                                ${pokestop.lureId},
-                                ${pokestop.pokestopDisplay},
-                                ${pokestop.incidentExpireTimestamp},
-                                ${pokestop.firstSeenTimestamp},
-                                ${pokestop.gruntType},
-                                ${pokestop.sponsorId}
-                            )`);
-                            /*
-                                ${pokestop.questType},
-                                ${pokestop.questTimestamp},
-                                ${pokestop.questTarget},
-                                ${pokestop.questConditions},
-                                ${pokestop.questRewards},
-                                ${pokestop.questTemplate},
-                            */
                             if (!this.stopsIdsPerCell[fort.cell]) {
                                 this.stopsIdsPerCell[fort.cell] = [];
                             }
@@ -568,8 +297,12 @@ class Consumer {
                     sponsor_id=VALUES(sponsor_id),
                     raid_pokemon_evolution=VALUES(raid_pokemon_evolution)
                 `;
-                let result = await db.query(sqlUpdate);
-                //console.log('[Gym] Result:', result.affectedRows);
+                try {
+                    let result = await db.query(sqlUpdate);
+                    //console.log('[Gym] Result:', result.affectedRows);
+                } catch (err) {
+                    console.error('[Gym] Error:', err);
+                }
             }
             if (pokestopsSQL.length > 0) {
                 let sqlUpdate = `INSERT INTO pokestop (
@@ -607,130 +340,12 @@ class Consumer {
                     quest_rewards=VALUES(quest_rewards),
                     quest_template=VALUES(quest_template),
                 */
-                let result = await db.query(sqlUpdate);
-                //console.log('[Pokestop] Result:', result.affectedRows);
-            }
-        }
-    }
-
-    async updateGymValues(gym) {
-        let ts = new Date().getTime() / 1000;
-        let oldGym;
-        try {
-            oldGym = await Gym.getById(gym.id, true);
-        } catch (err) {
-            oldGym = null;
-        }
-        
-        if (gym.raidIsExclusive && Gym.exRaidBossId) {
-            gym.raidPokemonId = Gym.exRaidBossId;
-            gym.raidPokemonForm = Gym.exRaidBossForm || 0;
-        }
-        
-        gym.updated = ts;
-        
-        if (!oldGym) {
-            WebhookController.instance.addGymEvent(gym.toJson('gym'));
-            WebhookController.instance.addGymInfoEvent(gym.toJson('gym-info'));
-            let raidBattleTime = new Date((gym.raidBattleTimestamp || 0) * 1000); // TODO: Probably going to get a divide by zero error >.>
-            let raidEndTime = Date((gym.raidEndTimestamp || 0) * 1000);
-            let now = new Date().getTime() / 1000;            
-            
-            if (raidBattleTime > now && gym.raidLevel || 0 > 0) {
-                WebhookController.instance.addEggEvent(gym.toJson('egg'));
-            } else if (raidEndTime > now && gym.raidPokemonId || 0 > 0) {
-                WebhookController.instance.addRaidEvent(gym.toJson('raid'));
-            }
-        } else {
-            if (oldGym.cellId && !gym.cellId) {
-                gym.cellId = oldGym.cellId;
-            }
-            if (oldGym.name && !gym.name) {
-                gym.name = oldGym.name;
-            }
-            if (oldGym.url && !gym.url) {
-                gym.url = oldGym.url;
-            }
-            if (oldGym.raidIsExclusive && !gym.raidIsExclusive) {
-                gym.raidIsExclusive = oldGym.raidIsExclusive;
-            }
-            if (oldGym.availableSlots !== gym.availableSlots ||
-                oldGym.teamId !== gym.teamId ||
-                oldGym.inBattle !== gym.inBattle) {
-                WebhookController.instance.addGymInfoEvent(gym.toJson('gym-info'));
-            }
-            if (!gym.raidEndTimestamp && oldGym.raidEndTimestamp) {
-                gym.raidEndTimestamp = oldGym.raidEndTimestamp;
-            }
-            // TODO: Double check
-            if (gym.raidSpawnTimestamp > 0 && (
-                    oldGym.raidLevel !== gym.raidLevel ||
-                    oldGym.raidPokemonId !== gym.raidPokemonId ||
-                    oldGym.raidSpawnTimestamp !== gym.raidSpawnTimestamp
-                )) {
-                
-                let raidBattleTime = new Date((gym.raidBattleTimestamp || 0) * 1000);
-                let raidEndTime = new Date((gym.raidEndTimestamp || 0) * 1000);
-                let now = new Date().getTime() / 1000;
-
-                if (raidBattleTime > now && gym.raidLevel || 0 > 0) {
-                    WebhookController.instance.addEggEvent(gym.toJson('egg'));
-                } else if (raidEndTime > now && gym.raidPokemonId || 0 > 0) {
-                    WebhookController.instance.addRaidEvent(gym.toJson('raid'));
+                try {
+                    let result = await db.query(sqlUpdate);
+                    //console.log('[Pokestop] Result:', result.affectedRows);
+                } catch (err) {
+                    console.error('[Pokestop] Error:', err);
                 }
-            }
-        }
-    }
-
-    async updatePokestopValues(pokestop, updateQuest) {
-        let oldPokestop;
-        try {
-            oldPokestop = await Pokestop.getById(pokestop.id);
-        } catch {
-            oldPokestop = null;
-        }
-        pokestop.updated = new Date().getTime() / 1000;
-        
-        if (!oldPokestop) {
-            WebhookController.instance.addPokestopEvent(pokestop.toJson('pokestop'));
-            if ((pokestop.lureExpireTimestamp || 0) > 0) {
-                WebhookController.instance.addLureEvent(pokestop.toJson('lure'));
-            }
-            if ((pokestop.questTimestamp || 0) > 0) {
-                WebhookController.instance.addQuestEvent(pokestop.toJson('quest'));
-            }
-            if ((pokestop.incidentExpireTimestamp || 0) > 0) {
-                WebhookController.instance.addInvasionEvent(pokestop.toJson('invasion'));
-            }
-        } else {
-            if (oldPokestop.cellId && !pokestop.cellId) {
-                pokestop.cellId = oldPokestop.cellId;
-            }
-            if (oldPokestop.name && !pokestop.name) {
-                pokestop.name = oldPokestop.name;
-            }
-            if (oldPokestop.url && !pokestop.url) {
-                pokestop.url = oldPokestop.url;
-            }
-            if (updateQuest && oldPokestop.questType && pokestop.questType) {
-                pokestop.questType = oldPokestop.questType;
-                pokestop.questTarget = oldPokestop.questTarget;
-                pokestop.questConditions = oldPokestop.questConditions;
-                pokestop.questRewards = oldPokestop.questRewards;
-                pokestop.questTimestamp = oldPokestop.questTimestamp;
-                pokestop.questTemplate = oldPokestop.questTemplate;
-            }
-            if (oldPokestop.lureId && !pokestop.lureId) {
-                pokestop.lureId = oldPokestop.lureId;
-            }
-            if ((oldPokestop.lureExpireTimestamp || 0) < (pokestop.lureExpireTimestamp || 0)) {
-                WebhookController.instance.addLureEvent(pokestop.toJson('lure'));
-            }
-            if ((oldPokestop.incidentExpireTimestamp || 0) < (pokestop.incidentExpireTimestamp || 0)) {
-                WebhookController.instance.addInvasionEvent(pokestop.toJson('invasion'));
-            }
-            if (updateQuest && (pokestop.questTimestamp || 0) > (oldPokestop.questTimestamp || 0)) {
-                WebhookController.instance.addQuestEvent(pokestop.toJson('quest'));
             }
         }
     }
@@ -748,7 +363,7 @@ class Consumer {
                     let id = details.fort_id;
                     let lat = details.latitude;
                     let lon = details.longitude;
-                    fortDetailsSQL.push(`('${id}', ${lat}, ${lon}, "${name}", "${url}", ${ts}, ${ts})`);
+                    fortDetailsSQL.push(`('${id}', ${lat}, ${lon}, \`${name}\`, "${url}", ${ts}, ${ts})`);
                 } catch (err) {
                     console.error('[FortDetails] Error:', err);
                 }
@@ -764,8 +379,12 @@ class Consumer {
                 updated=VALUES(updated),
                 first_seen_timestamp=VALUES(first_seen_timestamp)
             `;
-            let result = await db.query(sqlUpdate);
-            //console.log('[FortDetails] Result:', result.affectedRows);
+            try {
+                let result = await db.query(sqlUpdate);
+                //console.log('[FortDetails] Result:', result.affectedRows);
+            } catch (err) {
+                console.error('[FortDetails] Error:', err);
+            }
         }
     }
 
@@ -780,7 +399,7 @@ class Consumer {
                     let id = info.gym_status_and_defenders.pokemon_fort_proto.id;
                     let lat = info.gym_status_and_defenders.pokemon_fort_proto.latitude;
                     let lon = info.gym_status_and_defenders.pokemon_fort_proto.longitude;
-                    gymInfosSQL.push(`('${id}', ${lat}, ${lon}, "${name}", "${url}", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())`);
+                    gymInfosSQL.push(`('${id}', ${lat}, ${lon}, \`${name}\`, "${url}", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())`);
                 } catch (err) {
                     console.error('[GymInfos] Error:', err);
                 }
@@ -869,8 +488,9 @@ class Consumer {
                         warnWeather = severityCondition.warn_weather;
                     }
                     const weather = new Weather(cellId, level, lat, lon, gameplayCondition, windDirection, cloudLevel, rainLevel, windLevel, snowLevel, fogLevel, seLevel, severity, warnWeather, ts);
+                    // TODO: Move weather webhook to Weather class
                     WebhookController.instance.addWeatherEvent(weather.toJson());
-                    weatherSQL.push(`(${cellId}, ${level}, ${lat}, ${lon}, ${gameplayCondition}, ${windDirection}, ${cloudLevel}, ${rainLevel}, ${windLevel}, ${snowLevel}, ${fogLevel}, ${seLevel}, ${severity}, ${warnWeather}, ${ts})`);
+                    weatherSQL.push(weather.toSql());
                 } catch (err) {
                     console.error('[Weather] Error:', err);
                 }
@@ -942,45 +562,9 @@ class Consumer {
                         await spawnpoint.save(false);
                         //console.log('spawnpoint id is null:', pokemon);
                     }
-                    await this.updatePokemonValues(pokemon);
+                    await pokemon.update();
 
-                    encountersSQL.push(`
-                    (
-                        ${String(pokemon.id)},
-                        ${pokemon.pokemonId},
-                        ${pokemon.lat || null},
-                        ${pokemon.lon || null},
-                        ${pokemon.spawnId || null},
-                        ${pokemon.expireTimestamp || null},
-                        ${pokemon.atkIv || null},
-                        ${pokemon.defIv || null},
-                        ${pokemon.staIv || null},
-                        ${pokemon.move1 || null},
-                        ${pokemon.move2 || null},
-                        ${pokemon.gender},
-                        ${pokemon.form},
-                        ${pokemon.cp || null},
-                        ${pokemon.level || null},
-                        ${pokemon.weather || 0},
-                        ${pokemon.costume || 0},
-                        ${pokemon.weight || null},
-                        ${pokemon.size || null},
-                        ${pokemon.displayPokemonId || null},
-                        ${pokemon.pokestopId ? '\'' + pokemon.pokestopId + '\'' : null},
-                        ${pokemon.updated || null},
-                        ${pokemon.firstSeenTimestamp || null},
-                        ${pokemon.changed || null},
-                        ${pokemon.cellId || null},
-                        ${pokemon.expireTimestampVerified || 0},
-                        ${pokemon.shiny || null},
-                        ${pokemon.username ? '\'' + pokemon.username + '\'' : null},
-                        ${pokemon.capture1 || null},
-                        ${pokemon.capture2 || null},
-                        ${pokemon.capture3 || null},
-                        ${pokemon.pvpRankingsGreatLeague ? "'" + JSON.stringify(pokemon.pvpRankingsGreatLeague) + "'" : null},
-                        ${pokemon.pvpRankingsUltraLeague ? "'" + JSON.stringify(pokemon.pvpRankingsUltraLeague) + "'" : null}
-                    )
-                    `);
+                    encountersSQL.push(pokemon.toSql());
                 } catch (err) {
                     console.error('[Encounter] Error:', err);
                 }
@@ -1055,33 +639,8 @@ class Consumer {
                     // Add quest data to pokestop object
                     pokestop.addQuest(quest);
                     // Check if we need to send any webhooks
-                    await this.updatePokestopValues(pokestop, true);
-                    questsSQL.push(`
-                    (
-                        '${quest.fort_id}',
-                        ${pokestop.lat},
-                        ${pokestop.lon},
-                        ${pokestop.name ? '"' + pokestop.name + '"' : null},
-                        ${pokestop.url ? '"' + pokestop.url + '"' : null},
-                        ${pokestop.lureExpireTimestamp},
-                        ${pokestop.lastModifiedTimestamp},
-                        ${pokestop.updated},
-                        ${pokestop.enabled},
-                        ${pokestop.questType},
-                        ${pokestop.questTimestamp},
-                        ${pokestop.questTarget},
-                        '${JSON.stringify(pokestop.questConditions)}',
-                        '${JSON.stringify(pokestop.questRewards)}',
-                        '${pokestop.questTemplate}',
-                        ${pokestop.cellId},
-                        ${pokestop.deleted},
-                        ${pokestop.lureId},
-                        ${pokestop.pokestopDisplay},
-                        ${pokestop.incidentExpireTimestamp},
-                        ${pokestop.firstSeenTimestamp},
-                        ${pokestop.gruntType},
-                        ${pokestop.sponsorId}
-                    )`);
+                    await pokestop.update(true);
+                    questsSQL.push(pokestop.toSql('quest'));
                 }
             }
             if (questsSQL.length > 0) {
@@ -1145,29 +704,7 @@ class Consumer {
                     if (account instanceof Account) {
                         // Add quest data to pokestop object
                         account.parsePlayerData(data);
-                        playerDataSQL.push(`
-                        (
-                            '${account.username}',
-                            '${account.password}',
-                            ${account.firstWarningTimestamp},                        
-                            ${account.failedTimestamp},
-                            ${account.failed},
-                            ${account.level},
-                            ${account.last_encounter_lat},
-                            ${account.last_encounter_lon},
-                            ${account.last_encounter_time},
-                            ${account.spins},
-                            ${account.tutorial},
-                            ${account.creationTimestampMs},
-                            ${account.warn},
-                            ${account.warnExpireMs},
-                            ${account.warnMessageAcknowledged},
-                            ${account.suspendedMessageAcknowledged},
-                            ${account.wasSuspended},
-                            ${account.banned},
-                            ${account.creationTimestamp},
-                            ${account.warnExpireTimestamp}
-                        )`);
+                        playerDataSQL.push(account.toSql());
                     }
                 } catch (err) {
                     console.error('[Account] Error:', err);

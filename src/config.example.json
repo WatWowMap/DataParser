@@ -1,14 +1,20 @@
 {
     "host": "0.0.0.0",
     "port": 9001,
-    "clusters": 8,
+    "clusters": 2,
     "db": {
         "host": "127.0.0.1",
         "port": 3306,
         "username": "user123",
         "password": "pass123",
         "database": "rdmdb",
-        "charset": "utf8mb4"
+        "charset": "utf8mb4",
+        "connectionLimit": 1000
+    },
+    "redis": {
+        "host": "127.0.0.1",
+        "port": 6379,
+        "password": ""
     },
     "webhooks": {
         "enabled": false,
