@@ -115,7 +115,7 @@ class Pokemon {
                     this.expireTimestampVerified = true;
                 }
             } else {
-                spawnpoint = new Spawnpoint(this.spawnId, this.lat, this.lon, null, ts);
+                spawnpoint = new Spawnpoint(this.spawnId, this.lat, this.lon, null, Math.round(timestampMs / 1000));
                 await spawnpoint.save(false);
                 this.expireTimestamp = null;
             }
