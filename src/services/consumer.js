@@ -400,7 +400,7 @@ class Consumer {
             let spawnpoint;
             let secondOfHour = null;
             if (pokemon.expireTimestampVerified && pokemon.expireTimestamp) {
-                let date = moment(pokemon.expireTimestamp * 1000).format('mm:ss');
+                let date = moment.unix(pokemon.expireTimestamp).format('mm:ss');
                 let split = date.split(':');
                 let minute = parseInt(split[0]);
                 let second = parseInt(split[1]);
