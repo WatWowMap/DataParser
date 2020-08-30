@@ -1,35 +1,12 @@
 'use strict';
 
-const config = require('../src/config.json');
-const baseStats = require('./masterfile.json');
+const masterfile = require('./masterfile.json');
 const cpMultiplier = require('./cp_multiplier.json');
-
+const redisClient = require('../src/services/redis.js');
 //const fs = require('fs-extra');
-const redis = require('redis');
-
-const redisOptions = {
-    host: config.redis.host,
-    port: config.redis.port,
-    //string_numbers: true,
-    //socket_keepalive: true,
-    //db: null,
-    tls: false
-};
-if (config.redis.password) {
-    redisOptions.password = config.redis.password;
-}
-const client = redis.createClient(redisOptions);
-
-client.on('connect', () => {
-    console.log('[Redis] Connected');
-});
-
-client.on('error', (error) => {
-    console.error('[Redis] Error:', error);
-});
 
 let pokemon = {};
-let pokemonObject = baseStats.pokemon;
+let pokemonObject = masterfile.pokemon;
 
 
 const calculateAllRanks = async () => {
@@ -68,9 +45,9 @@ const calculateAllRanks = async () => {
 };
 
 const calculateTopRanks = (pokemonId, formId, cap) => {
-    console.log('[PvP] Calculating Top Ranks for:', baseStats.pokemon[pokemonId].name, '(' + pokemonId + ')', 'with form id:', formId);
+    console.log('[PvP] Calculating Top Ranks for:', masterfile.pokemon[pokemonId].name, '(' + pokemonId + ')', 'with form id:', formId);
     let currentPokemon = initializeBlankPokemon();
-    let bestStat = {attack: 0, defense: 0, stamina: 0, value: 0};
+    let bestStat = { attack: 0, defense: 0, stamina: 0, value: 0 };
     let arrayToSort = [];
     
     if (!pokemon[pokemonId]) {
@@ -91,8 +68,7 @@ const calculateTopRanks = (pokemonId, formId, cap) => {
     }
 
     arrayToSort.sort((a, b) => b.value - a.value);
-	
-    let best = arrayToSort[0].value;
+    const best = arrayToSort[0].value;
     for (let i = 0; i < arrayToSort.length; i++) {
         let percent = precisionRound((arrayToSort[i].value / best) * 100, 2);
         arrayToSort[i].percent = percent;
@@ -130,31 +106,33 @@ const calculateBestPvPStat = (pokemonId, formId, attack, defense, stamina, cap) 
 };
 
 const calculatePvPStat = (pokemonId, formId, level, attack, defense, stamina) => {
-    let pokemonAttack = (formId >= 0 && pokemonObject[pokemonId].forms[formId].attack) ? pokemonObject[pokemonId].forms[formId].attack : pokemonObject[pokemonId].attack;
-    let pokemonDefense = (formId >= 0 && pokemonObject[pokemonId].forms[formId].defense) ? pokemonObject[pokemonId].forms[formId].defense : pokemonObject[pokemonId].defense;
-    let pokemonStamina = (formId >= 0 && pokemonObject[pokemonId].forms[formId].stamina) ? pokemonObject[pokemonId].forms[formId].stamina : pokemonObject[pokemonId].stamina;
-
-    attack = (attack + pokemonAttack) * cpMultiplier[level];
-    defense = (defense + pokemonDefense) * cpMultiplier[level];
-    stamina = (stamina + pokemonStamina) * cpMultiplier[level];
-
-    return Math.round(attack * defense * Math.floor(stamina));
+    const pokemonAttack = formId >= 0 && pokemonObject[pokemonId].forms[formId].attack
+        ? pokemonObject[pokemonId].forms[formId].attack
+        : pokemonObject[pokemonId].attack;
+    const pokemonDefense = formId >= 0 && pokemonObject[pokemonId].forms[formId].defense
+        ? pokemonObject[pokemonId].forms[formId].defense
+        : pokemonObject[pokemonId].defense;
+    const pokemonStamina = formId >= 0 && pokemonObject[pokemonId].forms[formId].stamina
+        ? pokemonObject[pokemonId].forms[formId].stamina
+        : pokemonObject[pokemonId].stamina;
+    return Math.round(
+        (attack + pokemonAttack) * cpMultiplier[level] *
+        (defense + pokemonDefense) * cpMultiplier[level] *
+        (stamina + pokemonStamina) * cpMultiplier[level]);
 };
 
 const calculateCP = (pokemonId, formId, attack , defense, stamina, level) => {
-    let cp = 0;
-    let multiplier = cpMultiplier[level];
-  
-    let pokemonAttack = (formId >= 0 && pokemonObject[pokemonId].forms[formId].attack) ? pokemonObject[pokemonId].forms[formId].attack : pokemonObject[pokemonId].attack;
-    let pokemonDefense = (formId >= 0 && pokemonObject[pokemonId].forms[formId].defense) ? pokemonObject[pokemonId].forms[formId].defense : pokemonObject[pokemonId].defense;
-    let pokemonStamina = (formId >= 0 && pokemonObject[pokemonId].forms[formId].stamina) ? pokemonObject[pokemonId].forms[formId].stamina : pokemonObject[pokemonId].stamina;
+    const multiplier = Math.pow(cpMultiplier[level], 2);
 
-    let attackMultiplier = pokemonAttack + parseInt(attack);
-    let defenseMultiplier = Math.pow(pokemonDefense + parseInt(defense), 0.5);
-    let staminaMultiplier = Math.pow(pokemonStamina + parseInt(stamina), 0.5);
+    const pokemonAttack = (formId >= 0 && pokemonObject[pokemonId].forms[formId].attack) ? pokemonObject[pokemonId].forms[formId].attack : pokemonObject[pokemonId].attack;
+    const pokemonDefense = (formId >= 0 && pokemonObject[pokemonId].forms[formId].defense) ? pokemonObject[pokemonId].forms[formId].defense : pokemonObject[pokemonId].defense;
+    const pokemonStamina = (formId >= 0 && pokemonObject[pokemonId].forms[formId].stamina) ? pokemonObject[pokemonId].forms[formId].stamina : pokemonObject[pokemonId].stamina;
 
-    multiplier = Math.pow(multiplier, 2);
-    cp = Math.floor((attackMultiplier * defenseMultiplier * staminaMultiplier * multiplier) / 10);
+    const attackMultiplier = pokemonAttack + parseInt(attack);
+    const defenseMultiplier = Math.pow(pokemonDefense + parseInt(defense), 0.5);
+    const staminaMultiplier = Math.pow(pokemonStamina + parseInt(stamina), 0.5);
+
+    const cp = Math.floor((attackMultiplier * defenseMultiplier * staminaMultiplier * multiplier) / 10);
     return cp < 10 ? 10 : cp;
 };
 
@@ -173,7 +151,7 @@ const initializeBlankPokemon = () => {
 };
 
 const precisionRound = (number, precision) => {
-    let factor = Math.pow(10, precision);
+    const factor = Math.pow(10, precision);
     return Math.round(number * factor) / factor;
 };
 
@@ -182,47 +160,49 @@ const writePvPData = async (data, league) => {
         if (data[pokemon].forms) {
             for (let form in data[pokemon].forms) {
                 console.log('[PvP] Inserting pokemon_id', pokemon, 'with form_id', form);
-                let currentPokemon = data[pokemon].forms[form];
+                const currentPokemon = data[pokemon].forms[form];
                 await insertCurrentPokemon(league, parseInt(pokemon), parseInt(form), currentPokemon);
             }
         } else {
             console.log('[PvP] Inserting pokemon_id', pokemon, 'with no form');
-            let currentPokemon = data[pokemon];
+            const currentPokemon = data[pokemon];
             await insertCurrentPokemon(league, parseInt(pokemon), 0, currentPokemon);
         }
     }
 };
 
 const insertCurrentPokemon = async (league, pokemonId, formId, pokemon) => {
-    return await new Promise(async (resolve) => {
-        for (let attack in pokemon) {
-            for (let defense in pokemon[attack]) {
-                for (let stamina in pokemon[attack][defense]) {
-                    let currentValue = pokemon[attack][defense][stamina];
-                    let value = {
-                        pokemon_id: pokemonId,
-                        form_id: formId,
-                        attack: stamina,
-                        defense: defense,
-                        stamina: attack,
-                        cp: currentValue.cp,
-                        level: currentValue.level,
-                        percent: currentValue.percent,
-                        rank: currentValue.rank,
-                        value: currentValue.value
-                    };
-                    client.hset(league, `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`, JSON.stringify(value), (err, reply) => {
-                        if (err) {
-                            console.error('[Redis] Error:', err);
-                            return;
-                        }
-                        //console.log('[Redis] Reply:', reply);
-                    });
-                    resolve(null);
-                }
+    for (let attack in pokemon) {
+        for (let defense in pokemon[attack]) {
+            for (let stamina in pokemon[attack][defense]) {
+                const currentValue = pokemon[attack][defense][stamina];
+                const value = {
+                    pokemon_id: pokemonId,
+                    form_id: formId,
+                    attack: stamina,
+                    defense: defense,
+                    stamina: attack,
+                    cp: currentValue.cp,
+                    level: currentValue.level,
+                    percent: currentValue.percent,
+                    rank: currentValue.rank,
+                    value: currentValue.value
+                };
+                const key = `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`;
+                await redisClient.hset(league, key, JSON.stringify(value));
+                /*
+                client.hset(league, `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`, JSON.stringify(value), (err, reply) => {
+                    if (err) {
+                        console.error('[Redis] Error:', err);
+                        return;
+                    }
+                    //console.log('[Redis] Reply:', reply);
+                });
+                */
+                resolve(null);
             }
         }
-    });
+    }
 };
 
 calculateAllRanks();

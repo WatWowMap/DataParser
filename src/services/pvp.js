@@ -1,31 +1,11 @@
 'use strict';
 
 const config = require('../config.json');
-const MySQLConnector = require('./mysql.js');
-const db = new MySQLConnector(config.db);
+//const MySQLConnector = require('./mysql.js');
+//const db = new MySQLConnector(config.db);
 //const cpMultipliers = require('../../static/cp_multiplier.json');
 const masterfile = require('../../static/masterfile.json');
-
-const redis = require('redis');
-const redisOptions = {
-    host: config.redis.host,
-    port: config.redis.port,
-    //string_numbers: true,
-    //socket_keepalive: true,
-    //password: '',
-    //db: null,
-    tls: false
-};
-if (config.redis.password) {
-    redisOptions.password = config.redis.password;
-}
-const client = redis.createClient(redisOptions);
-client.on('connect', () => {
-    console.log('[Redis] Connected');
-});
-client.on('error', (error) => {
-    console.error('[Redis] Error:', error);
-});
+const redisClient = require('../services/redis.js');
 
 /*
 function calculateCP(pokemonId, formId, attack , defense, stamina, level) {
@@ -192,7 +172,7 @@ function searchTopRank(search, filter) {
 }
 */
 
-async function calculatePossibleCPs(pokemonId, formId, attack, defense, stamina, level, gender, league) {
+const calculatePossibleCPs = async (pokemonId, formId, attack, defense, stamina, level, gender, league) => {
     return new Promise(async (resolve) => {
         let possibleCPs = [];
         if (isNaN(attack) || isNaN(defense) || isNaN(stamina) || isNaN(level)) {
@@ -235,28 +215,30 @@ async function calculatePossibleCPs(pokemonId, formId, attack, defense, stamina,
         }
         return resolve(possibleCPs);
     });
-}
+};
 
-async function queryPvPRank(pokemonId, formId, attack, defense, stamina, level, league) {
-    return await new Promise(async (resolve) => {
-        let form = formId;
-        if (!masterfile.pokemon[pokemonId].forms[formId] ||
-            !masterfile.pokemon[pokemonId].forms[formId].attack) {
-            form = 0;
+const queryPvPRank = async (pokemonId, formId, attack, defense, stamina, level, league) => {
+    let form = formId;
+    if (!masterfile.pokemon[pokemonId].forms[formId] ||
+        !masterfile.pokemon[pokemonId].forms[formId].attack) {
+        form = 0;
+    }
+    const key = `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`;
+    const stats = await redisClient.hget(league + '_league', key);
+    return stats;
+    /*
+    client.hget(league + '_league', key, (err, reply) => {
+        if (err) {
+            console.error('[Redis] Error:', err);
+            return resolve(null);
         }
-        const key = `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`;
-        client.hget(league + '_league', key, (err, reply) => {
-            if (err) {
-                console.error('[Redis] Error:', err);
-                return resolve(null);
-            }
-            if (!reply) {
-                return resolve(null);
-            }
-            let obj = JSON.parse(reply);
-            return resolve(obj);
-        });
+        if (!reply) {
+            return resolve(null);
+        }
+        let obj = JSON.parse(reply);
+        return resolve(obj);
     });
+    */
 }
 
 module.exports = {

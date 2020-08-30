@@ -3,6 +3,7 @@
 const mysql = require('mysql');
 const config = require('../config.json');
 
+// Create a mysql connection pool with the specified options
 const pool  = mysql.createPool({
     host             : config.db.host,
     port             : config.db.port,
@@ -29,12 +30,24 @@ pool.on('enqueue', () => {
 //    console.log('[MySQL] Connection %d released', connection.threadId);
 //});
 
+/**
+ * MySql Connector class
+ */
 class MySQLConnector {
 
+    /**
+     * 
+     * @param {*} config 
+     */
     constructor(config) {
         this.config = config;
     }
 
+    /**
+     * 
+     * @param {*} sql 
+     * @param {*} args 
+     */
     async query(sql, args) {
         return new Promise((resolve, reject) => {
             pool.getConnection((err, connection) => {
@@ -42,7 +55,6 @@ class MySQLConnector {
                     // Not connected
                     return reject(err);
                 }
-          
                 // Use the connection
                 connection.query(sql, args, (error, results, fields) => {
                     // When done with the connection, release it back to the pool
@@ -51,6 +63,7 @@ class MySQLConnector {
                     if (error) {
                         return reject(error);
                     }
+                    // Return results
                     return resolve(results);
                 });
             });
