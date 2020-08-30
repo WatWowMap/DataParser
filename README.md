@@ -11,8 +11,8 @@ Raw data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/
 2.) Install dependencies `npm install`  
 3.) Copy config `cp src/config.example.json src/config.json`  
 4.) Fill out config `vi src/config.json` (listening port, instances, db info, etc)  
-5.) Create PvP stat tables, run `npm create-pvp-tables` (optional, only needed if you want PvP stats)  
-6.) Run `npm start` (Database tables will be created if they don't exist)  
+5.) Create PvP stat tables, run `npm run create-pvp-tables` (optional, only needed if you want PvP stats)  
+6.) Run `npm run start` (Database tables will be created if they don't exist)  
 7.) Point `data_endpoint` config property in [DeviceConfigManager](https://github.com/versx/DeviceConfigManager) to `http://dataparser_ip:9001`  
 
 ## Updating  
