@@ -78,7 +78,7 @@ class Pokemon {
      */
     async initWild(data) {
         this.id = BigInt(data.wild.encounter_id).toString();
-        let ts = new Date().getTime() / 1000;
+        let timestampMs = new Date().getTime();
         //console.log('Wild Pokemon Data:', data.wild.pokemon_data);
         this.pokemonId = data.wild.pokemon_data.pokemon_id;
         if (data.wild.latitude === undefined || data.wild.latitude === null) {
@@ -95,7 +95,7 @@ class Pokemon {
         }
         this.username = data.wild.username;
         if (data.wild.time_till_hidden_ms > 0 && data.wild.time_till_hidden_ms <= 90000) {
-            this.expireTimestamp = Math.round(ts + data.wild.time_till_hidden_ms);
+            this.expireTimestamp = Math.round((timestampMs + data.wild.time_till_hidden_ms) / 1000);
             this.expireTimestampVerified = true;
         } else {
             this.expireTimestampVerified = false;
@@ -155,7 +155,7 @@ class Pokemon {
             this.capture2 = null;
             this.capture3 = null;
         }
-        this.changed = ts;
+        this.changed = Math.round(timestampMs / 1000);
     }
 
     /**
