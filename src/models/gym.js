@@ -2,6 +2,7 @@
 
 const config = require('../config.json');
 const MySQLConnector = require('../services/mysql.js');
+const WebhookController = require('../services/webhook.js');
 const db = new MySQLConnector(config.db);
 
 const PokemonEvolution = {
@@ -11,8 +12,15 @@ const PokemonEvolution = {
 	MegaY: 3
 };
 
+/**
+ * Gym model class.
+ */
 class Gym {
 
+    /**
+     * Initialize new Gym object.
+     * @param data 
+     */
     constructor(data) {
         if (data.fort) {
             this.id = data.fort.id;
@@ -22,7 +30,7 @@ class Gym {
             this.enabled = data.fort.enabled;
             this.guardingPokemonId = data.fort.guard_pokemon_id;
             this.teamId = data.fort.owned_by_team;
-            this.availableSlots = data.fort.gym_display.slots_available;
+            this.availableSlots = data.fort.gym_display.slots_available; // TODO: No slots available?
             this.lastModifiedTimestamp = data.fort.last_modified_timestamp_ms / 1000;
             this.exRaidEligible = data.fort.is_ex_raid_eligible;
             this.inBattle = data.fort.is_in_battle;
@@ -132,6 +140,186 @@ class Gym {
             return new Gym(result);
         }
         return null;
+    }
+
+    /**
+     * Update Gym values if changed from already found Gym
+     */
+    async update() {
+        let ts = new Date().getTime() / 1000;
+        let oldGym;
+        try {
+            oldGym = await Gym.getById(this.id, true);
+        } catch (err) {
+            oldGym = null;
+        }
+        
+        if (this.raidIsExclusive && Gym.exRaidBossId) {
+            this.raidPokemonId = Gym.exRaidBossId;
+            this.raidPokemonForm = Gym.exRaidBossForm || 0;
+        }
+        
+        this.updated = ts;
+        
+        if (!oldGym) {
+            WebhookController.instance.addGymEvent(this.toJson('gym'));
+            WebhookController.instance.addGymInfoEvent(this.toJson('gym-info'));
+            let raidBattleTime = new Date((this.raidBattleTimestamp || 0) * 1000); // TODO: Probably going to get a divide by zero error >.>
+            let raidEndTime = Date((this.raidEndTimestamp || 0) * 1000);
+            let now = new Date().getTime() / 1000;            
+            
+            if (raidBattleTime > now && this.raidLevel || 0 > 0) {
+                WebhookController.instance.addEggEvent(this.toJson('egg'));
+            } else if (raidEndTime > now && this.raidPokemonId || 0 > 0) {
+                WebhookController.instance.addRaidEvent(this.toJson('raid'));
+            }
+        } else {
+            if (oldGym.cellId && !this.cellId) {
+                this.cellId = oldGym.cellId;
+            }
+            if (oldGym.name && !this.name) {
+                this.name = oldGym.name;
+            }
+            if (oldGym.url && !this.url) {
+                this.url = oldGym.url;
+            }
+            if (oldGym.raidIsExclusive && !this.raidIsExclusive) {
+                this.raidIsExclusive = oldGym.raidIsExclusive;
+            }
+            if (oldGym.availableSlots !== this.availableSlots ||
+                oldGym.teamId !== this.teamId ||
+                oldGym.inBattle !== this.inBattle) {
+                WebhookController.instance.addGymInfoEvent(this.toJson('gym-info'));
+            }
+            if (!this.raidEndTimestamp && oldGym.raidEndTimestamp) {
+                this.raidEndTimestamp = oldGym.raidEndTimestamp;
+            }
+            if (this.raidSpawnTimestamp > 0 && (
+                    oldGym.raidLevel !== this.raidLevel ||
+                    oldGym.raidPokemonId !== this.raidPokemonId ||
+                    oldGym.raidSpawnTimestamp !== this.raidSpawnTimestamp
+                )) {
+                let raidBattleTime = new Date((this.raidBattleTimestamp || 0) * 1000);
+                let raidEndTime = new Date((this.raidEndTimestamp || 0) * 1000);
+                let now = new Date().getTime() / 1000;
+
+                if (raidBattleTime > now && this.raidLevel || 0 > 0) {
+                    WebhookController.instance.addEggEvent(this.toJson('egg'));
+                } else if (raidEndTime > now && this.raidPokemonId || 0 > 0) {
+                    WebhookController.instance.addRaidEvent(this.toJson('raid'));
+                }
+            }
+        }
+    }
+
+    /**
+     * Get Gym object as sql string
+     */
+    toSql() {
+        return {
+            sql: `
+            (
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?
+            )
+            `,
+            args: [
+                this.id.toString(),
+                this.lat,
+                this.lon,
+                this.name,
+                this.url,
+                this.lastModifiedTimestamp,
+                this.raidEndTimestamp,
+                this.raidSpawnTimestamp,
+                this.raidBattleTimestamp,
+                this.updated,
+                this.raidPokemonId,
+                this.guardingPokemonId,
+                this.availableSlots,
+                this.teamId,
+                this.raidLevel,
+                this.enabled,
+                this.exRaidEligible,
+                this.inBattle,
+                this.raidPokemonMove1,
+                this.raidPokemonMove2,
+                this.raidPokemonForm,
+                this.raidPokemonCp,
+                this.raidIsExclusive,
+                this.cellId.toString(),
+                this.deleted,
+                this.totalCp,
+                this.firstSeenTimestamp,
+                this.raidPokemonGender,
+                this.sponsorId,
+                this.raidPokemonEvolution
+            ]
+        };
+        /*
+        return `
+        (
+            '${this.id}',
+            ${this.lat},
+            ${this.lon},
+            ${this.name ? '"' + mysql.escape(this.name) + '"' : null},
+            ${this.url ? '"' + this.url + '"' : null},
+            ${this.lastModifiedTimestamp},
+            ${this.raidEndTimestamp},
+            ${this.raidSpawnTimestamp},
+            ${this.raidBattleTimestamp},
+            ${this.updated},
+            ${this.raidPokemonId},
+            ${this.guardingPokemonId},
+            ${this.availableSlots},
+            ${this.teamId},
+            ${this.raidLevel},
+            ${this.enabled},
+            ${this.exRaidEligible},
+            ${this.inBattle},
+            ${this.raidPokemonMove1},
+            ${this.raidPokemonMove2},
+            ${this.raidPokemonForm},
+            ${this.raidPokemonCp},
+            ${this.raidIsExclusive},
+            ${this.cellId},
+            ${this.deleted},
+            ${this.totalCp},
+            ${this.firstSeenTimestamp},
+            ${this.raidPokemonGender},
+            ${this.sponsorId},
+            ${this.raidPokemonEvolution}
+        )
+        `;
+        */
     }
 
     /**

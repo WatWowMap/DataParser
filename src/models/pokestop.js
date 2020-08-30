@@ -2,6 +2,7 @@
 
 const config = require('../config.json');
 const MySQLConnector = require('../services/mysql.js');
+const WebhookController = require('../services/webhook.js');
 const db = new MySQLConnector(config.db);
 
 const QuestReward = {
@@ -150,6 +151,10 @@ class Pokestop {
         }
     }
 
+    /**
+     * Get Pokestop by Pokestop id.
+     * @param encounterId 
+     */
     static async getById(id) {
         let sql = `
         SELECT id, lat, lon, name, url, lure_expire_timestamp, last_modified_timestamp, updated,
@@ -167,6 +172,62 @@ class Pokestop {
             return pokestop;
         }
         return null;
+    }
+
+    /**
+     * Update Pokestop values if changed from already found Pokestop
+     */
+    async update(updateQuest) {
+        let oldPokestop;
+        try {
+            oldPokestop = await Pokestop.getById(this.id);
+        } catch {
+            oldPokestop = null;
+        }
+        this.updated = new Date().getTime() / 1000;
+        
+        if (!oldPokestop) {
+            WebhookController.instance.addPokestopEvent(this.toJson('pokestop'));
+            if ((this.lureExpireTimestamp || 0) > 0) {
+                WebhookController.instance.addLureEvent(this.toJson('lure'));
+            }
+            if ((this.questTimestamp || 0) > 0) {
+                WebhookController.instance.addQuestEvent(this.toJson('quest'));
+            }
+            if ((this.incidentExpireTimestamp || 0) > 0) {
+                WebhookController.instance.addInvasionEvent(this.toJson('invasion'));
+            }
+        } else {
+            if (oldPokestop.cellId && !this.cellId) {
+                this.cellId = oldPokestop.cellId;
+            }
+            if (oldPokestop.name && !this.name) {
+                this.name = oldPokestop.name;
+            }
+            if (oldPokestop.url && !this.url) {
+                this.url = oldPokestop.url;
+            }
+            if (updateQuest && oldPokestop.questType && this.questType) {
+                this.questType = oldPokestop.questType;
+                this.questTarget = oldPokestop.questTarget;
+                this.questConditions = oldPokestop.questConditions;
+                this.questRewards = oldPokestop.questRewards;
+                this.questTimestamp = oldPokestop.questTimestamp;
+                this.questTemplate = oldPokestop.questTemplate;
+            }
+            if (oldPokestop.lureId && !this.lureId) {
+                this.lureId = oldPokestop.lureId;
+            }
+            if ((oldPokestop.lureExpireTimestamp || 0) < (this.lureExpireTimestamp || 0)) {
+                WebhookController.instance.addLureEvent(this.toJson('lure'));
+            }
+            if ((oldPokestop.incidentExpireTimestamp || 0) < (this.incidentExpireTimestamp || 0)) {
+                WebhookController.instance.addInvasionEvent(this.toJson('invasion'));
+            }
+            if (updateQuest && (this.questTimestamp || 0) > (oldPokestop.questTimestamp || 0)) {
+                WebhookController.instance.addQuestEvent(this.toJson('quest'));
+            }
+        }
     }
 
         /**
@@ -327,6 +388,175 @@ class Pokestop {
         this.questConditions = conditions;
         this.questRewards = rewards;
         this.questTimestamp = ts;
+    }
+
+    /**
+     * Get Pokestop object as sql string
+     */
+    toSql(type) {
+        switch (type) {
+            case 'quest':
+                return {
+                    sql: `
+                    (
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?
+                    )
+                    `,
+                    args: [
+                        this.id.toString(),
+                        this.lat,
+                        this.lon,
+                        this.name,
+                        this.url,
+                        this.lureExpireTimestamp,
+                        this.lastModifiedTimestamp,
+                        this.updated,
+                        this.enabled,
+                        this.questType,
+                        this.questTimestamp,
+                        this.questTarget,
+                        JSON.stringify(this.questConditions),
+                        JSON.stringify(this.questRewards),
+                        this.questTemplate,
+                        this.cellId.toString(),
+                        this.deleted,
+                        this.lureId,
+                        this.pokestopDisplay,
+                        this.incidentExpireTimestamp,
+                        this.firstSeenTimestamp,
+                        this.gruntType,
+                        this.sponsorId
+                    ]
+                };
+                /*
+                return `
+                (
+                    '${this.id}',
+                    ${this.lat},
+                    ${this.lon},
+                    ${this.name ? '"' + mysql.escape(this.name) + '"' : null},
+                    ${this.url ? '"' + pokesthistop.url + '"' : null},
+                    ${this.lureExpireTimestamp},
+                    ${this.lastModifiedTimestamp},
+                    ${this.updated},
+                    ${this.enabled},
+                    ${this.questType},
+                    ${this.questTimestamp},
+                    ${this.questTarget},
+                    '${JSON.stringify(this.questConditions)}',
+                    '${JSON.stringify(this.questRewards)}',
+                    '${this.questTemplate}',
+                    ${this.cellId},
+                    ${this.deleted},
+                    ${this.lureId},
+                    ${this.pokestopDisplay},
+                    ${this.incidentExpireTimestamp},
+                    ${this.firstSeenTimestamp},
+                    ${this.gruntType},
+                    ${this.sponsorId}
+                )
+                `;
+                */
+            default:
+                return {
+                    sql: `
+                    (
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?
+                    )
+                    `,
+                    args: [
+                        this.id.toString(),
+                        this.lat,
+                        this.lon,
+                        this.name,
+                        this.url,
+                        this.lureExpireTimestamp,
+                        this.lastModifiedTimestamp,
+                        this.updated,
+                        this.enabled,
+
+                        this.cellId.toString(),
+                        this.deleted,
+                        this.lureId,
+                        this.pokestopDisplay,
+                        this.incidentExpireTimestamp,
+                        this.firstSeenTimestamp,
+                        this.gruntType,
+                        this.sponsorId
+                    ]
+                };
+                /*
+                return `
+                (
+                    '${this.id}',
+                    ${this.lat},
+                    ${this.lon},
+                    ${this.name ? '"' + mysql.escape(this.name) + '"' : null},
+                    ${this.url ? '"' + this.url + '"' : null},
+                    ${this.lureExpireTimestamp},
+                    ${this.lastModifiedTimestamp},
+                    ${this.updated},
+                    ${this.enabled},
+        
+                    ${this.cellId},
+                    ${this.deleted},
+                    ${this.lureId},
+                    ${this.pokestopDisplay},
+                    ${this.incidentExpireTimestamp},
+                    ${this.firstSeenTimestamp},
+                    ${this.gruntType},
+                    ${this.sponsorId}
+                )
+                `;
+                */
+                /*
+                    ${this.questType},
+                    ${this.questTimestamp},
+                    ${this.questTarget},
+                    ${this.questConditions},
+                    ${this.questRewards},
+                    ${this.questTemplate},
+                */
+        }
     }
 
     /**

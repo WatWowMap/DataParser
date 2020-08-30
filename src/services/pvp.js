@@ -1,10 +1,7 @@
 'use strict';
 
-const config = require('../config.json');
-const MySQLConnector = require('./mysql.js');
-const db = new MySQLConnector(config.db);
-//const cpMultipliers = require('../../static/cp_multiplier.json');
 const masterfile = require('../../static/masterfile.json');
+const redisClient = require('../services/redis.js');
 
 /*
 function calculateCP(pokemonId, formId, attack , defense, stamina, level) {
@@ -119,9 +116,7 @@ function precisionRound(number, precision) {
     let factor = Math.pow(10, precision);
     return Math.round(number * factor) / factor;
 }
-*/
 
-/*
 function filterPossibleCPsByRank(possibleCPs, minRank = 4096){
     let returnCPs = {};
     for (let pokemon in possibleCPs) {
@@ -171,7 +166,7 @@ function searchTopRank(search, filter) {
 }
 */
 
-async function calculatePossibleCPs(pokemonId, formId, attack, defense, stamina, level, gender, league) {
+const calculatePossibleCPs = async (pokemonId, formId, attack, defense, stamina, level, gender, league) => {
     return new Promise(async (resolve) => {
         let possibleCPs = [];
         if (isNaN(attack) || isNaN(defense) || isNaN(stamina) || isNaN(level)) {
@@ -197,7 +192,7 @@ async function calculatePossibleCPs(pokemonId, formId, attack, defense, stamina,
         let evolvedForm;
         for (let i = 0; i < masterfile.pokemon[pokemonId].evolutions.length; i++) {
             // Check for Evolution Form
-            if (formId > 0){
+            if (formId > 0) {
                 if (!masterfile.pokemon[pokemonId].forms[formId]) {
                     evolvedForm = masterfile.pokemon[masterfile.pokemon[pokemonId].evolutions[i]].default_form;
                 } else {
@@ -214,43 +209,21 @@ async function calculatePossibleCPs(pokemonId, formId, attack, defense, stamina,
         }
         return resolve(possibleCPs);
     });
-}
+};
 
-async function queryPvPRank(pokemonId, formId, attack, defense, stamina, level, league) {
-    return await new Promise(async (resolve) => {
-        let form = formId;
-        if (!masterfile.pokemon[pokemonId].forms[formId] ||
-            !masterfile.pokemon[pokemonId].forms[formId].attack) {
-            form = 0;
-        }
-        let pvpLeague = league + '_league';
-        let sql = `
-        SELECT * FROM ${pvpLeague}
-        WHERE pokemon_id = ${pokemonId}
-            AND form = ${form}
-            AND attack = ${attack}
-            AND defense = ${defense}
-            AND stamina = ${stamina}
-            AND level >= ${level}
-        `;
-        await db.query(sql, async (error, results) => {
-            if (error || results.length == 0) {
-                return resolve(null);
-            }
-            return resolve({
-                pokemon_id: pokemonId,
-                form_id: formId,
-                attack: attack,
-                defense: defense,
-                stamina: stamina,
-                level: results[0].level,
-                cp: results[0].cp,
-                percent: results[0].percent,
-                rank: results[0].rank,
-                pvp_value: results[0].value
-            });
-        });
-    });
+const queryPvPRank = async (pokemonId, formId, attack, defense, stamina, level, league) => {
+    let form = formId;
+    if (!masterfile.pokemon[pokemonId].forms[formId] ||
+        !masterfile.pokemon[pokemonId].forms[formId].attack) {
+        form = 0;
+    }
+    const key = league + '_league';
+    const field = `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`;
+    const stats = await redisClient.hget(key, field);
+    if (stats && stats.level > level) {
+        return stats;
+    }
+    return null;
 }
 
 module.exports = {

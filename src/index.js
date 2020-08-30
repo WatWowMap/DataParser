@@ -10,23 +10,22 @@ const utils = require('./services/utils.js');
 const WebhookController = require('./services/webhook.js');
 const instances = config.clusters || 4;
 
-// TODO: Use redis for PvP tables
 // TODO: Add raw proto to redis
 // TODO: Loop redis insert into mysql
 
 const run = async () => {
-    // Start database migrator
-    const dbMigrator = new Migrator();
-    await dbMigrator.load();
-
-    // Wait until migrations are done to proceed
-    while (!dbMigrator.done) {
-        await utils.snooze(1000);
-    }
-
     if (cluster.isMaster) {
         console.log(`[Cluster] Master ${process.pid} is running`);
-    
+
+        // Start database migrator
+        const dbMigrator = new Migrator();
+        await dbMigrator.load();
+
+        // Wait until migrations are done to proceed
+        while (!dbMigrator.done) {
+            await utils.snooze(1000);
+        }
+        
         // Fork workers
         for (let i = 0; i < instances; i++) {
             cluster.fork();
@@ -52,13 +51,12 @@ const run = async () => {
 
         app.use(express.json({ limit: '50mb' }));
 
+        app.get('/', (req, res) => res.send('OK'));
         app.post('/', (req, res) => {
             const body = req.body;
             console.log('[Webhook Test] Received', body.length, 'webhook payloads:', body);
             res.send('OK');
         });
-
-        app.get('/', (req, res) => res.send('OK'));
         app.post('/raw', async (req, res) => await routes.handleRawData(req, res));
 
         app.listen(config.port, config.host, () => console.log(`Listening on ${config.host}:${config.port}...`));
