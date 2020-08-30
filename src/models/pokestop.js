@@ -151,6 +151,10 @@ class Pokestop {
         }
     }
 
+    /**
+     * Get Pokestop by Pokestop id.
+     * @param encounterId 
+     */
     static async getById(id) {
         let sql = `
         SELECT id, lat, lon, name, url, lure_expire_timestamp, last_modified_timestamp, updated,
@@ -170,6 +174,9 @@ class Pokestop {
         return null;
     }
 
+    /**
+     * Update Pokestop values if changed from already found Pokestop
+     */
     async update(updateQuest) {
         let oldPokestop;
         try {
@@ -383,6 +390,9 @@ class Pokestop {
         this.questTimestamp = ts;
     }
 
+    /**
+     * Get Pokestop object as sql string
+     */
     toSql(type) {
         switch (type) {
             case 'quest':

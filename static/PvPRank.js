@@ -190,15 +190,6 @@ const insertCurrentPokemon = async (league, pokemonId, formId, pokemon) => {
                 };
                 const key = `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`;
                 await redisClient.hset(league, key, JSON.stringify(value));
-                /*
-                client.hset(league, `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`, JSON.stringify(value), (err, reply) => {
-                    if (err) {
-                        console.error('[Redis] Error:', err);
-                        return;
-                    }
-                    //console.log('[Redis] Reply:', reply);
-                });
-                */
                 resolve(null);
             }
         }

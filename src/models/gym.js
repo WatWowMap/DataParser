@@ -12,8 +12,15 @@ const PokemonEvolution = {
 	MegaY: 3
 };
 
+/**
+ * Gym model class.
+ */
 class Gym {
 
+    /**
+     * Initialize new Gym object.
+     * @param data 
+     */
     constructor(data) {
         if (data.fort) {
             this.id = data.fort.id;
@@ -135,6 +142,9 @@ class Gym {
         return null;
     }
 
+    /**
+     * Update Gym values if changed from already found Gym
+     */
     async update() {
         let ts = new Date().getTime() / 1000;
         let oldGym;
@@ -202,6 +212,9 @@ class Gym {
         }
     }
 
+    /**
+     * Get Gym object as sql string
+     */
     toSql() {
         return `
         (

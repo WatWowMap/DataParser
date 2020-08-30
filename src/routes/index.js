@@ -5,9 +5,7 @@ const POGOProtos = require('pogo-protos');
 
 const Account = require('../models/account.js');
 const Device = require('../models/device.js');
-
 const { sendResponse, base64_decode } = require('../services/utils.js');
-
 const Consumer = require('../services/consumer.js');
 
 const RpcMethod = {
@@ -20,8 +18,14 @@ const RpcMethod = {
     GymGetInfoResponse: 156
 };
 
+/**
+ * RouteController class
+ */
 class RouteController {
 
+    /**
+     * Initialize new RouteController object.
+     */
     constructor() {
         this.emptyCells = [];
         this.levelCache = {};

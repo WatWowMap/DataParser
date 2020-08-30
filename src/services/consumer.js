@@ -14,7 +14,9 @@ const WebhookController = require('../services/webhook.js');
 const Weather = require('../models/weather');
 const db = new MySQLConnector(config.db);
 
-
+/**
+ * Consumer database class
+ */
 class Consumer {
 
     constructor(username) {

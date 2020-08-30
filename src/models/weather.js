@@ -29,6 +29,9 @@ class Weather {
         this.updated = updated;
     }
 
+    /**
+     * Get Weather object as sql string
+     */
     toSql() {
         return `
         (

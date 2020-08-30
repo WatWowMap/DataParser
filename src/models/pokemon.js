@@ -12,6 +12,9 @@ const pvp = require('../services/pvp.js');
 const WebhookController = require('../services/webhook.js');
 const db = new MySQLConnector(config.db);
 
+/**
+ * Pokemon model class.
+ */
 class Pokemon {
     static DittoPokemonId = 132;
     static WeatherBoostMinLevel = 6;
@@ -71,6 +74,10 @@ class Pokemon {
         }
     }
 
+    /**
+     * Initialize new Pokemon object from WildPokemon.
+     * @param data 
+     */
     async initWild(data) {
         this.id = BigInt(data.wild.encounter_id).toString();
         let ts = new Date().getTime() / 1000;
@@ -159,6 +166,10 @@ class Pokemon {
         this.changed = ts;
     }
 
+    /**
+     * Initialize new Pokemon object from NearbyPokemon.
+     * @param data 
+     */
     async initNearby(data) {
         this.id = BigInt(data.nearby.encounter_id).toString();
         this.pokemonId = data.nearby.pokemon_id;
@@ -408,6 +419,9 @@ class Pokemon {
         }
     }
 
+    /**
+     * Update Pokemon values if changed from already found Pokemon
+     */
     async update() {
         let updateIV = false;
         let now = new Date().getTime() / 1000;
@@ -545,6 +559,9 @@ class Pokemon {
         }
     }
 
+    /**
+     * Get Pokemon object as sql string
+     */
     toSql() {
         return `
         (

@@ -184,6 +184,9 @@ class Account {
         //console.log('[Account] SetLevel:', result);
     }
 
+    /**
+     * Get Account object as sql string
+     */
     toSql() {
         return `
         (

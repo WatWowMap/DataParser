@@ -1,9 +1,5 @@
 'use strict';
 
-const config = require('../config.json');
-//const MySQLConnector = require('./mysql.js');
-//const db = new MySQLConnector(config.db);
-//const cpMultipliers = require('../../static/cp_multiplier.json');
 const masterfile = require('../../static/masterfile.json');
 const redisClient = require('../services/redis.js');
 
@@ -120,9 +116,7 @@ function precisionRound(number, precision) {
     let factor = Math.pow(10, precision);
     return Math.round(number * factor) / factor;
 }
-*/
 
-/*
 function filterPossibleCPsByRank(possibleCPs, minRank = 4096){
     let returnCPs = {};
     for (let pokemon in possibleCPs) {
@@ -223,22 +217,13 @@ const queryPvPRank = async (pokemonId, formId, attack, defense, stamina, level, 
         !masterfile.pokemon[pokemonId].forms[formId].attack) {
         form = 0;
     }
-    const key = `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`;
-    const stats = await redisClient.hget(league + '_league', key);
-    return stats;
-    /*
-    client.hget(league + '_league', key, (err, reply) => {
-        if (err) {
-            console.error('[Redis] Error:', err);
-            return resolve(null);
-        }
-        if (!reply) {
-            return resolve(null);
-        }
-        let obj = JSON.parse(reply);
-        return resolve(obj);
-    });
-    */
+    const key = league + '_league';
+    const field = `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`;
+    const stats = await redisClient.hget(key, field);
+    if (stats && stats.level > level) {
+        return stats;
+    }
+    return null;
 }
 
 module.exports = {
