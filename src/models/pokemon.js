@@ -1,7 +1,5 @@
 'use strict';
 
-const moment = require('moment');
-
 const config = require('../config.json');
 const Cell = require('./cell.js');
 const Pokestop = require('./pokestop.js');
@@ -533,10 +531,9 @@ class Pokemon {
             let spawnpoint;
             let secondOfHour = null;
             if (this.expireTimestampVerified && this.expireTimestamp) {
-                let date = moment(this.expireTimestamp).format('mm:ss');
-                let split = date.split(':');
-                let minute = parseInt(split[0]);
-                let second = parseInt(split[1]);
+                let date = new Date(this.expireTimestamp * 1000);
+                let minute = date.getMinutes();
+                let second = date.getSeconds();
                 secondOfHour = second + minute * 60;
             }
             spawnpoint = new Spawnpoint(

@@ -51,13 +51,12 @@ const run = async () => {
 
         app.use(express.json({ limit: '50mb' }));
 
+        app.get('/', (req, res) => res.send('OK'));
         app.post('/', (req, res) => {
             const body = req.body;
             console.log('[Webhook Test] Received', body.length, 'webhook payloads:', body);
             res.send('OK');
         });
-
-        app.get('/', (req, res) => res.send('OK'));
         app.post('/raw', async (req, res) => await routes.handleRawData(req, res));
 
         app.listen(config.port, config.host, () => console.log(`Listening on ${config.host}:${config.port}...`));
