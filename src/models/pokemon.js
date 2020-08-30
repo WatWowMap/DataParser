@@ -97,12 +97,6 @@ class Pokemon {
         if (data.wild.time_till_hidden_ms > 0 && data.wild.time_till_hidden_ms <= 90000) {
             this.expireTimestamp = Math.round(ts + data.wild.time_till_hidden_ms);
             this.expireTimestampVerified = true;
-            let date = new Date(this.expireTimestamp * 1000);
-            let minute = date.getMinutes();
-            let second = date.getSeconds();
-            let secondOfHour = second + minute * 60;
-            let spawnPoint = new Spawnpoint(this.spawnId, this.lat, this.lon, secondOfHour, ts);
-            await spawnPoint.save(true);
         } else {
             this.expireTimestampVerified = false;
         }
