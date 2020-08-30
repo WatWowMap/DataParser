@@ -190,7 +190,6 @@ const insertCurrentPokemon = async (league, pokemonId, formId, pokemon) => {
                 };
                 const key = `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`;
                 await redisClient.hset(league, key, JSON.stringify(value));
-                resolve(null);
             }
         }
     }
