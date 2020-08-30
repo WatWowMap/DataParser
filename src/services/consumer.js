@@ -49,7 +49,7 @@ class Consumer {
                         try {
                             pokestop = await Pokestop.getById(pokemon.pokestopId);
                         } catch (err) {
-                            console.error('[Pokemon] Error:', err);
+                            console.error('[Wild] Error:', err);
                         }
                         if (!pokestop) {
                             continue;
@@ -144,7 +144,7 @@ class Consumer {
                         try {
                             pokestop = await Pokestop.getById(pokemon.pokestopId);
                         } catch (err) {
-                            console.error('[Pokemon] Error:', err);
+                            console.error('[Nearby] Error:', err.message);
                         }
                         if (!pokestop) {
                             continue;
@@ -161,7 +161,7 @@ class Consumer {
                     }
                     nearbySQL.push(pokemon.toSql());
                 } catch (err) {
-                    console.error('[Nearby] Error:', err);
+                    console.error('[Nearby] Error:', err.message);
                 }
             }
             if (nearbySQL.length > 0) {
@@ -211,8 +211,12 @@ class Consumer {
                 pvp_rankings_great_league=VALUES(pvp_rankings_great_league),
                 pvp_rankings_ultra_league=VALUES(pvp_rankings_ultra_league)
                 `;
+                try {
                 let result = await db.query(sqlUpdate);
                 //console.log('[Nearby] Result:', result.affectedRows);
+                } catch (err) {
+                    console.error('[Nearby] Error:', err.message);
+                }
             }
         }
     }
@@ -221,6 +225,8 @@ class Consumer {
         if (forts.length > 0) {
             let gymsSQL = [];
             let pokestopsSQL = [];
+            let gymArgs = [];
+            let pokestopArgs = [];
             for (let i = 0; i < forts.length; i++) {
                 let fort = forts[i];
                 try {
@@ -231,7 +237,9 @@ class Consumer {
                                 fort: fort.data
                             });
                             await gym.update();
-                            gymsSQL.push(gym.toSql());
+                            let gymSQL = gym.toSql();
+                            gymsSQL.push(gymSQL.sql);
+                            gymSQL.args.forEach(x => gymArgs.push(x));
 
                             if (!this.gymIdsPerCell[fort.cell]) {
                                 this.gymIdsPerCell[fort.cell] = [];
@@ -244,7 +252,10 @@ class Consumer {
                                 fort: fort.data
                             });
                             await pokestop.update(false);
-                            pokestopsSQL.push(pokestop.toSql('pokestop'));
+                            let pokestopSQL = pokestop.toSql('pokestop');
+                            pokestopsSQL.push(pokestopSQL.sql);
+                            pokestopSQL.args.forEach(x => pokestopArgs.push(x));
+                            //pokestopsSQL.push(pokestop.toSql('pokestop'));
 
                             if (!this.stopsIdsPerCell[fort.cell]) {
                                 this.stopsIdsPerCell[fort.cell] = [];
@@ -300,10 +311,12 @@ class Consumer {
                     raid_pokemon_evolution=VALUES(raid_pokemon_evolution)
                 `;
                 try {
-                    let result = await db.query(sqlUpdate);
+                    let result = await db.query(sqlUpdate, gymArgs);
                     //console.log('[Gym] Result:', result.affectedRows);
                 } catch (err) {
-                    console.error('[Gym] Error:', err);
+                    console.error('[Gym] Error:', err.message);
+                    //console.error('sql:', sqlUpdate);
+                    //console.error('args:', args);
                 }
             }
             if (pokestopsSQL.length > 0) {
@@ -343,7 +356,7 @@ class Consumer {
                     quest_template=VALUES(quest_template),
                 */
                 try {
-                    let result = await db.query(sqlUpdate);
+                    let result = await db.query(sqlUpdate, pokestopArgs);
                     //console.log('[Pokestop] Result:', result.affectedRows);
                 } catch (err) {
                     console.error('[Pokestop] Error:', err);
@@ -357,6 +370,7 @@ class Consumer {
         if (fortDetails.length > 0) {
             let ts = new Date().getTime() / 1000;
             let fortDetailsSQL = [];
+            let args = [];
             for (let i = 0; i < fortDetails.length; i++) {
                 let details = fortDetails[i];
                 try {
@@ -365,7 +379,9 @@ class Consumer {
                     let id = details.fort_id;
                     let lat = details.latitude;
                     let lon = details.longitude;
-                    fortDetailsSQL.push(`('${id}', ${lat}, ${lon}, \`${name}\`, "${url}", ${ts}, ${ts})`);
+                    //fortDetailsSQL.push(`('${id}', ${lat}, ${lon}, \`${name}\`, "${url}", ${ts}, ${ts})`);
+                    fortDetailsSQL.push('(?, ?, ?, ?, ?, ?, ?)');
+                    args.push(id, lat, lon, name, url, ts, ts);
                 } catch (err) {
                     console.error('[FortDetails] Error:', err);
                 }
@@ -382,7 +398,7 @@ class Consumer {
                 first_seen_timestamp=VALUES(first_seen_timestamp)
             `;
             try {
-                let result = await db.query(sqlUpdate);
+                let result = await db.query(sqlUpdate, args);
                 //console.log('[FortDetails] Result:', result.affectedRows);
             } catch (err) {
                 console.error('[FortDetails] Error:', err);
@@ -393,6 +409,7 @@ class Consumer {
     async updateGymInfos(gymInfos) {
         if (gymInfos.length > 0) {
             let gymInfosSQL = [];
+            let args = [];
             for (let i = 0; i < gymInfos.length; i++) {
                 let info = gymInfos[i];
                 try {
@@ -401,7 +418,9 @@ class Consumer {
                     let id = info.gym_status_and_defenders.pokemon_fort_proto.id;
                     let lat = info.gym_status_and_defenders.pokemon_fort_proto.latitude;
                     let lon = info.gym_status_and_defenders.pokemon_fort_proto.longitude;
-                    gymInfosSQL.push(`('${id}', ${lat}, ${lon}, \`${name}\`, "${url}", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())`);
+                    gymInfosSQL.push('(?, ?, ?, ?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())');
+                    args.push(id, lat, lon, name, url);
+                    //gymInfosSQL.push(`('${id}', ${lat}, ${lon}, \`${name}\`, "${url}", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())`);
                 } catch (err) {
                     console.error('[GymInfos] Error:', err);
                 }
@@ -417,8 +436,12 @@ class Consumer {
                 updated=VALUES(updated),
                 updated=VALUES(first_seen_timestamp)
             `;
-            let result = await db.query(sqlUpdate);
-            //console.log('[GymInfos] Result:', result.affectedRows);
+            try {
+                let result = await db.query(sqlUpdate, args);
+                //console.log('[GymInfos] Result:', result.affectedRows);
+            } catch (err) {
+                console.error('[GymInfos] Error:', err);
+            }
         }
     }
 
@@ -629,6 +652,7 @@ class Consumer {
     async updateQuests(quests) {
         if (quests.length > 0) {
             let questsSQL = [];
+            let args = [];
             for (let i = 0; i < quests.length; i++) {
                 let quest = quests[i];
                 let pokestop;
@@ -642,7 +666,10 @@ class Consumer {
                     pokestop.addQuest(quest);
                     // Check if we need to send any webhooks
                     await pokestop.update(true);
-                    questsSQL.push(pokestop.toSql('quest'));
+                    let sql = pokestop.toSql('quest');
+                    questsSQL.push(sql.sql);
+                    sql.args.forEach(x => args.push(x));
+                    //questsSQL.push(pokestop.toSql('quest'));
                 }
             }
             if (questsSQL.length > 0) {
@@ -681,7 +708,7 @@ class Consumer {
                     sponsor_id=VALUES(sponsor_id)
                 `;
                 try {
-                    let result = await db.query(sqlUpdate);
+                    let result = await db.query(sqlUpdate, args);
                     //console.log('[Quest] Result:', result.affectedRows);
                 } catch (err) {
                     console.error('[Quest] Error:', err);

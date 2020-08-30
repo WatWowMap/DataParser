@@ -396,12 +396,67 @@ class Pokestop {
     toSql(type) {
         switch (type) {
             case 'quest':
+                return {
+                    sql: `
+                    (
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?
+                    )
+                    `,
+                    args: [
+                        this.id.toString(),
+                        this.lat,
+                        this.lon,
+                        this.name,
+                        this.url,
+                        this.lureExpireTimestamp,
+                        this.lastModifiedTimestamp,
+                        this.updated,
+                        this.enabled,
+                        this.questType,
+                        this.questTimestamp,
+                        this.questTarget,
+                        JSON.stringify(this.questConditions),
+                        JSON.stringify(this.questRewards),
+                        this.questTemplate,
+                        this.cellId.toString(),
+                        this.deleted,
+                        this.lureId,
+                        this.pokestopDisplay,
+                        this.incidentExpireTimestamp,
+                        this.firstSeenTimestamp,
+                        this.gruntType,
+                        this.sponsorId
+                    ]
+                };
+                /*
                 return `
                 (
                     '${this.id}',
                     ${this.lat},
                     ${this.lon},
-                    ${this.name ? '`' + this.name + '`' : null},
+                    ${this.name ? '"' + mysql.escape(this.name) + '"' : null},
                     ${this.url ? '"' + pokesthistop.url + '"' : null},
                     ${this.lureExpireTimestamp},
                     ${this.lastModifiedTimestamp},
@@ -423,13 +478,59 @@ class Pokestop {
                     ${this.sponsorId}
                 )
                 `;
+                */
             default:
+                return {
+                    sql: `
+                    (
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?
+                    )
+                    `,
+                    args: [
+                        this.id.toString(),
+                        this.lat,
+                        this.lon,
+                        this.name,
+                        this.url,
+                        this.lureExpireTimestamp,
+                        this.lastModifiedTimestamp,
+                        this.updated,
+                        this.enabled,
+
+                        this.cellId.toString(),
+                        this.deleted,
+                        this.lureId,
+                        this.pokestopDisplay,
+                        this.incidentExpireTimestamp,
+                        this.firstSeenTimestamp,
+                        this.gruntType,
+                        this.sponsorId
+                    ]
+                };
+                /*
                 return `
                 (
                     '${this.id}',
                     ${this.lat},
                     ${this.lon},
-                    ${this.name ? '`' + this.name + '`' : null},
+                    ${this.name ? '"' + mysql.escape(this.name) + '"' : null},
                     ${this.url ? '"' + this.url + '"' : null},
                     ${this.lureExpireTimestamp},
                     ${this.lastModifiedTimestamp},
@@ -446,6 +547,7 @@ class Pokestop {
                     ${this.sponsorId}
                 )
                 `;
+                */
                 /*
                     ${this.questType},
                     ${this.questTimestamp},

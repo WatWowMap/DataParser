@@ -216,12 +216,81 @@ class Gym {
      * Get Gym object as sql string
      */
     toSql() {
+        return {
+            sql: `
+            (
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?
+            )
+            `,
+            args: [
+                this.id.toString(),
+                this.lat,
+                this.lon,
+                this.name,
+                this.url,
+                this.lastModifiedTimestamp,
+                this.raidEndTimestamp,
+                this.raidSpawnTimestamp,
+                this.raidBattleTimestamp,
+                this.updated,
+                this.raidPokemonId,
+                this.guardingPokemonId,
+                this.availableSlots,
+                this.teamId,
+                this.raidLevel,
+                this.enabled,
+                this.exRaidEligible,
+                this.inBattle,
+                this.raidPokemonMove1,
+                this.raidPokemonMove2,
+                this.raidPokemonForm,
+                this.raidPokemonCp,
+                this.raidIsExclusive,
+                this.cellId.toString(),
+                this.deleted,
+                this.totalCp,
+                this.firstSeenTimestamp,
+                this.raidPokemonGender,
+                this.sponsorId,
+                this.raidPokemonEvolution
+            ]
+        };
+        /*
         return `
         (
             '${this.id}',
             ${this.lat},
             ${this.lon},
-            ${this.name ? '`' + this.name + '`' : null},
+            ${this.name ? '"' + mysql.escape(this.name) + '"' : null},
             ${this.url ? '"' + this.url + '"' : null},
             ${this.lastModifiedTimestamp},
             ${this.raidEndTimestamp},
@@ -250,6 +319,7 @@ class Gym {
             ${this.raidPokemonEvolution}
         )
         `;
+        */
     }
 
     /**
