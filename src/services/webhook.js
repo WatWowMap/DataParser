@@ -9,6 +9,11 @@ const config = require('../config.json');
 class WebhookController {
     static instance = new WebhookController(config.webhooks.urls, config.webhooks.delay);
 
+    /**
+     * Initialize new WebhookController object.
+     * @param {*} urls 
+     * @param {*} delay 
+     */
     constructor(urls, delay = 5) {
         console.info('[WebhookController] Starting up...');
         this.urls = urls;
@@ -51,6 +56,10 @@ class WebhookController {
         this.pokemonEvents.push(pokemon);
     }
 
+    /**
+     * Add Pokestop event json to pokestop events queue
+     * @param {*} pokestop 
+     */
     addPokestopEvent(pokestop) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
             return;
@@ -58,6 +67,10 @@ class WebhookController {
         this.pokestopEvents.push(pokestop);
     }
 
+    /**
+     * Add Pokestop lure event json to pokestop lure events queue
+     * @param {*} pokemon 
+     */
     addLureEvent(pokestop) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
             return;
@@ -65,6 +78,10 @@ class WebhookController {
         this.lureEvents.push(pokestop);
     }
 
+    /**
+     * Add Pokestop invasion event json to pokestop invasion events queue
+     * @param {*} pokemon 
+     */
     addInvasionEvent(pokestop) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
             return;
@@ -72,6 +89,10 @@ class WebhookController {
         this.invasionEvents.push(pokestop);
     }
 
+    /**
+     * Add Pokestop quest event json to pokestop quest events queue
+     * @param {*} pokemon 
+     */
     addQuestEvent(pokestop) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
             return;
@@ -79,6 +100,10 @@ class WebhookController {
         this.questEvents.push(pokestop);
     }
 
+    /**
+     * Add Gym event json to gym events queue
+     * @param {*} pokemon 
+     */
     addGymEvent(gym) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
             return;
@@ -86,6 +111,10 @@ class WebhookController {
         this.gymEvents.push(gym);
     }
 
+    /**
+     * Add Gym info/details event json to gym info events queue
+     * @param {*} pokemon 
+     */
     addGymInfoEvent(gym) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
             return;
@@ -93,6 +122,10 @@ class WebhookController {
         this.gymInfoEvents.push(gym);
     }
 
+    /**
+     * Add raid egg event json to egg events queue
+     * @param {*} pokemon 
+     */
     addEggEvent(gym) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
             return;
@@ -100,6 +133,10 @@ class WebhookController {
         this.eggEvents.push(gym);
     }
 
+    /**
+     * Add raid boss event json to raid events queue
+     * @param {*} pokemon 
+     */
     addRaidEvent(gym) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
             return;
@@ -107,6 +144,10 @@ class WebhookController {
         this.raidEvents.push(gym);
     }
 
+    /**
+     * Add Weather event json to weather events queue
+     * @param {*} pokemon 
+     */
     addWeatherEvent(weather) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
             return;

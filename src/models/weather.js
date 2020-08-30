@@ -30,6 +30,31 @@ class Weather {
     }
 
     /**
+     * Get Weather object as sql string
+     */
+    toSql() {
+        return `
+        (
+            ${this.id},
+            ${this.level},
+            ${this.latitude},
+            ${this.longitude},
+            ${this.gameplayCondition},
+            ${this.windDirection},
+            ${this.cloudLevel},
+            ${this.rainLevel},
+            ${this.windLevel},
+            ${this.snowLevel},
+            ${this.fogLevel},
+            ${this.seLevel},
+            ${this.severity},
+            ${this.warnWeather},
+            ${this.updated}
+        )
+        `;
+    }
+
+    /**
      * Get Weather object as JSON object with correct property keys for webhook payload
      */
     toJson() {

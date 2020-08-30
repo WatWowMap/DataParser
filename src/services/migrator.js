@@ -9,10 +9,15 @@ const utils = require('./utils.js');
 
 const migrationsDir = path.resolve(__dirname, '../../migrations');
 
+/**
+ * Database migration class
+ */
 class Migrator {
+
     constructor() {
         this.done = false;
     }
+
     async load() {
         let count = 1;
         let done = false;
@@ -68,11 +73,13 @@ class Migrator {
         }
         this.migrate(version, newestVersion);
     }
+
     static async getEntries() {
         const sql = 'SELECT `key`, `value` FROM metadata';
         const results = await db.query(sql, []);
         return results;
     }
+
     async migrate(fromVersion, toVersion) {
         if (fromVersion < toVersion) {
             console.log(`[DBController] Migrating database to version ${(fromVersion + 1)}`);
@@ -119,12 +126,15 @@ class Migrator {
             this.done = true;
         }
     }
+
     backup() {
         // TODO: Migrator backup
     }
+
     rollback() {
         // TODO: Migrator rollback
     }
+
     getNewestDbVersion() {
         let current = 0;
         let keepChecking = true;
@@ -137,6 +147,7 @@ class Migrator {
         }
         return current;
     }
+
     static async getValueForKey(key) {
         const sql = `
         SELECT value
@@ -156,6 +167,7 @@ class Migrator {
         const result = results[0];
         return result.value;
     }
+
     static async setValueForKey(key, value) {
         const sql = `
         INSERT INTO metadata (\`key\`, \`value\`)
