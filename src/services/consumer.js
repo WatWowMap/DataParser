@@ -36,7 +36,7 @@ class Consumer {
                     let pokemon = new Pokemon({
                         username: this.username,
                         cellId: wild.cell,
-                        timestampMs: wild.timestamp_ms,
+                        timestampMs: wild.timestampMs,
                         wild: wild.data
                     });
                     await pokemon.update();
