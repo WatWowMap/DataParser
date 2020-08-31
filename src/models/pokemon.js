@@ -95,7 +95,7 @@ class Pokemon {
         }
         this.username = data.wild.username;
         if (data.wild.time_till_hidden_ms > 0 && data.wild.time_till_hidden_ms <= 90000) {
-            this.expireTimestamp = Math.round((timestampMs + data.wild.time_till_hidden_ms) / 1000);
+            this.expireTimestamp = Math.round((data.timestampMs + data.wild.time_till_hidden_ms) / 1000);
             this.expireTimestampVerified = true;
         } else {
             this.expireTimestampVerified = false;
@@ -115,7 +115,7 @@ class Pokemon {
                     this.expireTimestampVerified = true;
                 }
             } else {
-                spawnpoint = new Spawnpoint(this.spawnId, this.lat, this.lon, null, Math.round(timestampMs / 1000));
+                spawnpoint = new Spawnpoint(this.spawnId, this.lat, this.lon, null, Math.round(data.timestampMs / 1000));
                 await spawnpoint.save(false);
                 this.expireTimestamp = null;
             }

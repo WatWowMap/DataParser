@@ -181,7 +181,7 @@ class RouteController {
                                 return res.sendStatus(400);
                             }
                             mapCellsNew.forEach(mapCell => {
-                                let timestampMs = mapCell.current_timestamp_ms;
+                                let timestampMs = parseInt(BigInt(mapCell.current_timestamp_ms).toString());
                                 let wildNew = mapCell.wild_pokemons;
                                 wildNew.forEach((wildPokemon) => {
                                     wildPokemons.push({
