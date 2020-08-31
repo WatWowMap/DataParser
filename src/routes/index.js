@@ -224,7 +224,7 @@ class RouteController {
                                         this.emptyCells[cell] = count + 1;
                                     }
                                     if (count === 3) {
-                                        console.debug('[Raw] Cell', cell, 'was empty 3 times in a row. Assuming empty.');
+                                        console.debug('[Raw] Cell', cell.toString(), 'was empty 3 times in a row. Assuming empty.');
                                         cells.push(cell);
                                     }
                                 });
