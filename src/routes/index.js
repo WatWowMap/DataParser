@@ -147,9 +147,9 @@ class RouteController {
                     if (trainerLevel >= 30 || isMadData !== false) {
                         try {
                             let er = POGOProtos.Networking.Responses.EncounterResponse.decode(base64_decode(data));
-                            if (er) {
+                            if (er && er.status === POGOProtos.Networking.Responses.EncounterResponse.Status.ENCOUNTER_SUCCESS) {
                                 encounters.push(er);
-                            } else {
+                            } else if (!er) {
                                 console.error('[Raw] Malformed EncounterResponse');
                             }
                         } catch (err) {
