@@ -50,6 +50,7 @@ const run = async () => {
         const routes = new RouteController();
 
         app.use(express.json({ limit: '50mb' }));
+        //app.use(require('express-status-monitor')()); //http://ip:port/status
 
         app.get('/', (req, res) => res.send('OK'));
         app.post('/', (req, res) => {
@@ -71,4 +72,13 @@ run().then(x => {
     console.log('Initialized');
 }).catch(err => {
     console.error('Error:', err);
+});
+
+process.on('uncaughtException', (err) => {
+    stLogger.error('Uncaught exception', err)
+    throw err
+});
+  
+process.on('unhandledRejection', (err) => {
+    stLogger.error('unhandled rejection', err)
 });

@@ -409,6 +409,8 @@ class Consumer {
     async updateGymInfos(gymInfos) {
         if (gymInfos.length > 0) {
             let gymInfosSQL = [];
+            let trainersSQL = [];
+            let defendersSQL = [];
             let args = [];
             for (let i = 0; i < gymInfos.length; i++) {
                 let info = gymInfos[i];
@@ -418,6 +420,36 @@ class Consumer {
                     let id = info.gym_status_and_defenders.pokemon_fort_proto.id;
                     let lat = info.gym_status_and_defenders.pokemon_fort_proto.latitude;
                     let lon = info.gym_status_and_defenders.pokemon_fort_proto.longitude;
+                    let gymDefenders = info.gym_status_and_defenders.gym_defender;
+                    if (gymDefenders) {
+                        for (let i = 0; i < gymDefenders.length; i++) {
+                            const gymDefender = gymDefenders[i];
+                            const trainer = gymDefender.trainer_public_profile;
+                            const defender = gymDefender.motivated_pokemon;
+                            //trainer_public_profile
+                            trainersSQL.push(`('${trainer.name}', ${trainer.level}, ${trainer.team_color}, ${trainer.battles_won}, ${trainer.km_walked}, ${trainer.caught_pokemon}, ${trainer.experience.toString()}, ${trainer.combat_rank}, ${trainer.combat_rating})`);
+                            defendersSQL.push(`
+                            (
+                                ${defender.pokemon.pokemon_id},
+                                ${defender.cp_when_deployed},
+                                ${defender.cp_now},
+                                ${defender.berry_value},
+                                ${gymDefender.deployment_totals.times_fed},
+                                ${gymDefender.deployment_totals.deployment_duration_ms / 1000},
+                                '${defender.pokemon.owner_name}',
+                                '${id}',
+                                ${defender.pokemon.individual_attack},
+                                ${defender.pokemon.individual_defense},
+                                ${defender.pokemon.individual_stamina},
+                                ${defender.pokemon.move_1},
+                                ${defender.pokemon.move_2}
+                            )
+                            `);
+                            //motivated_pokemon
+                            //deployment_totals { deployment_duration_ms, times_fed }
+                            console.log('Defenders:', defender);
+                        }
+                    }
                     gymInfosSQL.push('(?, ?, ?, ?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())');
                     args.push(id, lat, lon, name, url);
                     //gymInfosSQL.push(`('${id}', ${lat}, ${lon}, \`${name}\`, "${url}", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())`);
@@ -434,13 +466,62 @@ class Consumer {
                 name=VALUES(name),
                 url=VALUES(url),
                 updated=VALUES(updated),
-                updated=VALUES(first_seen_timestamp)
+                first_seen_timestamp=VALUES(first_seen_timestamp)
             `;
             try {
                 let result = await db.query(sqlUpdate, args);
                 //console.log('[GymInfos] Result:', result.affectedRows);
             } catch (err) {
                 console.error('[GymInfos] Error:', err);
+            }
+            if (trainersSQL.length > 0) {
+                let sql = 'INSERT INTO trainer (name, level, team_id, battles_won, km_walked, pokemon_caught, experience, combat_rank, combat_rating) VALUES';
+                sql += trainersSQL.join(',');
+                sql += `
+                ON DUPLICATE KEY UPDATE
+                    level=VALUES(level),
+                    team_id=VALUES(team_id),
+                    battles_won=VALUES(battles_won),
+                    km_walked=VALUES(km_walked),
+                    pokemon_caught=VALUES(pokemon_caught),
+                    experience=VALUES(experience),
+                    combat_rank=VALUES(combat_rank),
+                    combat_rating=VALUES(combat_rating)
+                `;
+                try {
+                    let result = await db.query(sql);
+                    //console.log('[GymInfos] Result:', result.affectedRows);
+                } catch (err) {
+                    console.error('[Trainers] Error:', err);
+                    console.error('sql:', sql);
+                }
+            }
+            if (defendersSQL.length > 0) {
+                let sql = 'INSERT INTO gym_defender (pokemon_id, cp_when_deployed, cp_now, berry_value, times_fed, deployment_duration, trainer_name, fort_id, atk_iv, def_iv, sta_iv, move_1, move_2) VALUES';
+                sql += defendersSQL.join(',');
+                sql += `
+                ON DUPLICATE KEY UPDATE
+                    pokemon_id=VALUES(pokemon_id),
+                    cp_when_deployed=VALUES(cp_when_deployed),
+                    cp_now=VALUES(cp_now),
+                    berry_value=VALUES(berry_value),
+                    times_fed=VALUES(times_fed),
+                    deployment_duration=VALUES(deployment_duration),
+                    trainer_name=VALUES(trainer_name),
+                    fort_id=VALUES(fort_id),
+                    atk_iv=VALUES(atk_iv),
+                    def_iv=VALUES(def_iv),
+                    sta_iv=VALUES(sta_iv),
+                    move_1=VALUES(move_1),
+                    move_2=VALUES(move_2)
+                `;
+                try {
+                    let result = await db.query(sql);
+                    //console.log('[GymInfos] Result:', result.affectedRows);
+                } catch (err) {
+                    console.error('[Defenders] Error:', err);
+                    console.error('sql:', sql);
+                }
             }
         }
     }
