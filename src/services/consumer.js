@@ -576,7 +576,7 @@ class Consumer {
                                 wild: encounter.wild_pokemon,
                                 username: this.username,
                                 cellId: cellId,
-                                timestampMs: encounter.wild_pokemon.last_modified_timestamp_ms //last_modified_timestamp_ms / timestamp_ms
+                                timestampMs: parseInt(BigInt(encounter.wild_pokemon.last_modified_timestamp_ms).toString()) //last_modified_timestamp_ms / timestamp_ms
                             });
                             await pokemon.addEncounter(encounter, this.username);
                         //}
