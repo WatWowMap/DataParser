@@ -1,6 +1,7 @@
 'use strict';
 
 const S2 = require('nodes2ts');
+const POGOProtos = require('pogo-protos');
 
 const config = require('../config.json');
 const Account = require('../models/account.js');
@@ -231,7 +232,7 @@ class Consumer {
                 let fort = forts[i];
                 try {
                     switch (fort.data.type) {
-                        case 0: // gym
+                        case POGOProtos.Map.Fort.FortType.GYM:
                             let gym = new Gym({
                                 cellId: fort.cell,
                                 fort: fort.data
@@ -246,7 +247,7 @@ class Consumer {
                             }
                             this.gymIdsPerCell[fort.cell.toString()].push(fort.data.id.toString());
                             break;
-                        case 1: // checkpoint
+                        case POGOProtos.Map.Fort.FortType.CHECKPOINT:
                             let pokestop = new Pokestop({
                                 cellId: fort.cell,
                                 fort: fort.data
@@ -366,11 +367,14 @@ class Consumer {
     }
 
     async updateFortDetails(fortDetails) {
-        // Update Pokestop
+        // Update Forts
         if (fortDetails.length > 0) {
             let ts = new Date().getTime() / 1000;
-            let fortDetailsSQL = [];
-            let args = [];
+            let gymDetailsSQL = [];
+            let gymArgs = [];
+            let pokestopDetailsSQL = [];
+            let pokestopArgs = [];
+
             for (let i = 0; i < fortDetails.length; i++) {
                 let details = fortDetails[i];
                 try {
@@ -380,28 +384,61 @@ class Consumer {
                     let lat = details.latitude;
                     let lon = details.longitude;
                     //fortDetailsSQL.push(`('${id}', ${lat}, ${lon}, \`${name}\`, "${url}", ${ts}, ${ts})`);
-                    fortDetailsSQL.push('(?, ?, ?, ?, ?, ?, ?)');
-                    args.push(id, lat, lon, name, url, ts, ts);
+                    switch (details.type) {
+                        case POGOProtos.Map.Fort.FortType.GYM:
+                            gymDetailsSQL.push('(?, ?, ?, ?, ?, ?, ?)');
+                            gymArgs.push(id, lat, lon, name, url, ts, ts);
+                            break;
+                        case POGOProtos.Map.Fort.FortType.CHECKPOINT:
+                            pokestopDetailsSQL.push('(?, ?, ?, ?, ?, ?, ?)');
+                            pokestopArgs.push(id, lat, lon, name, url, ts, ts);
+                            break;
+                    }
                 } catch (err) {
                     console.error('[FortDetails] Error:', err);
                 }
             }
-            let sqlUpdate = 'INSERT INTO gym (id, lat, lon, name, url, updated, first_seen_timestamp) VALUES';
-            sqlUpdate += fortDetailsSQL.join(',');
-            sqlUpdate += ` 
-            ON DUPLICATE KEY UPDATE
-                lat=VALUES(lat),
-                lon=VALUES(lon),
-                name=VALUES(name),
-                url=VALUES(url),
-                updated=VALUES(updated),
-                first_seen_timestamp=VALUES(first_seen_timestamp)
-            `;
-            try {
-                let result = await db.query(sqlUpdate, args);
-                //console.log('[FortDetails] Result:', result.affectedRows);
-            } catch (err) {
-                console.error('[FortDetails] Error:', err);
+
+            if (gymDetailsSQL.length > 0) {
+                let sqlUpdate = 'INSERT INTO gym (id, lat, lon, name, url, updated, first_seen_timestamp) VALUES';
+                sqlUpdate += gymDetailsSQL.join(',');
+                sqlUpdate += ` 
+                ON DUPLICATE KEY UPDATE
+                    lat=VALUES(lat),
+                    lon=VALUES(lon),
+                    name=VALUES(name),
+                    url=VALUES(url),
+                    updated=VALUES(updated),
+                    first_seen_timestamp=VALUES(first_seen_timestamp)
+                `;
+
+                try {
+                    let result = await db.query(sqlUpdate, gymArgs);
+                    //console.log('[FortDetails] Result:', result.affectedRows);
+                } catch (err) {
+                    console.error('[FortDetails] Error:', err);
+                }
+            }
+
+            if (pokestopDetailsSQL.length > 0) {
+                let sqlUpdate = 'INSERT INTO pokestop (id, lat, lon, name, url, updated, first_seen_timestamp) VALUES';
+                sqlUpdate += pokestopDetailsSQL.join(',');
+                sqlUpdate += ` 
+                ON DUPLICATE KEY UPDATE
+                    lat=VALUES(lat),
+                    lon=VALUES(lon),
+                    name=VALUES(name),
+                    url=VALUES(url),
+                    updated=VALUES(updated),
+                    first_seen_timestamp=VALUES(first_seen_timestamp)
+                `;
+
+                try {
+                    let result = await db.query(sqlUpdate, pokestopArgs);
+                    //console.log('[FortDetails] Result:', result.affectedRows);
+                } catch (err) {
+                    console.error('[FortDetails] Error:', err);
+                }
             }
         }
     }
