@@ -73,12 +73,3 @@ run().then(x => {
 }).catch(err => {
     console.error('Error:', err);
 });
-
-process.on('uncaughtException', (err) => {
-    stLogger.error('Uncaught exception', err)
-    throw err
-});
-  
-process.on('unhandledRejection', (err) => {
-    stLogger.error('unhandled rejection', err)
-});

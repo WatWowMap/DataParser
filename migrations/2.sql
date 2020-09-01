@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS trainer (
 	km_walked smallint DEFAULT 0,
 	pokemon_caught bigint DEFAULT 0,
 	experience bigint DEFAULT 0,
+	combat_rank bigint DEFAULT 0,
+	combat_rating bigint DEFAULT 0,
 	updated int DEFAULT 0,
 	PRIMARY KEY (name)	
 );
