@@ -10,6 +10,8 @@ const utils = require('./services/utils.js');
 const WebhookController = require('./services/webhook.js');
 const instances = config.clusters || 4;
 
+// TODO: Add webhooks to redis instead of internally cached
+// TODO: Make request->consumer async
 // TODO: Add raw proto to redis
 // TODO: Loop redis insert into mysql
 

@@ -284,42 +284,6 @@ class Gym {
                 this.raidPokemonEvolution
             ]
         };
-        /*
-        return `
-        (
-            '${this.id}',
-            ${this.lat},
-            ${this.lon},
-            ${this.name ? '"' + mysql.escape(this.name) + '"' : null},
-            ${this.url ? '"' + this.url + '"' : null},
-            ${this.lastModifiedTimestamp},
-            ${this.raidEndTimestamp},
-            ${this.raidSpawnTimestamp},
-            ${this.raidBattleTimestamp},
-            ${this.updated},
-            ${this.raidPokemonId},
-            ${this.guardingPokemonId},
-            ${this.availableSlots},
-            ${this.teamId},
-            ${this.raidLevel},
-            ${this.enabled},
-            ${this.exRaidEligible},
-            ${this.inBattle},
-            ${this.raidPokemonMove1},
-            ${this.raidPokemonMove2},
-            ${this.raidPokemonForm},
-            ${this.raidPokemonCp},
-            ${this.raidIsExclusive},
-            ${this.cellId},
-            ${this.deleted},
-            ${this.totalCp},
-            ${this.firstSeenTimestamp},
-            ${this.raidPokemonGender},
-            ${this.sponsorId},
-            ${this.raidPokemonEvolution}
-        )
-        `;
-        */
     }
 
     /**
