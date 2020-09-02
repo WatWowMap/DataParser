@@ -232,6 +232,9 @@ class Consumer {
                 try {
                     switch (fort.data.type) {
                         case 0: // gym
+                            if (!config.parse.gym) {
+                                continue;
+                            }
                             let gym = new Gym({
                                 cellId: fort.cell,
                                 fort: fort.data
@@ -247,6 +250,9 @@ class Consumer {
                             this.gymIdsPerCell[fort.cell.toString()].push(fort.data.id.toString());
                             break;
                         case 1: // checkpoint
+                            if (!config.parse.pokestops) {
+                                continue;
+                            }
                             let pokestop = new Pokestop({
                                 cellId: fort.cell,
                                 fort: fort.data
@@ -425,7 +431,7 @@ class Consumer {
                     let lat = info.gym_status_and_defenders.pokemon_fort_proto.latitude;
                     let lon = info.gym_status_and_defenders.pokemon_fort_proto.longitude;
                     let gymDefenders = info.gym_status_and_defenders.gym_defender;
-                    if (gymDefenders) {
+                    if (config.parse.gymDefenders && gymDefenders) {
                         for (let i = 0; i < gymDefenders.length; i++) {
                             const gymDefender = gymDefenders[i];
                             const trainer = gymDefender.trainer_public_profile;
