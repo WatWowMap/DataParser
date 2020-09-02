@@ -11,6 +11,15 @@
         "charset": "utf8mb4",
         "connectionLimit": 1000
     },
+    "parse": {
+        "pokemon": true,
+        "encounters": true,
+        "gym": true,
+        "pokestops": true,
+        "quests": true,
+        "gymDefenders": true,
+        "weather": true
+    },
     "redis": {
         "host": "127.0.0.1",
         "port": 6379,
