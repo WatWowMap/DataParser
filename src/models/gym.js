@@ -373,9 +373,9 @@ class Gym {
                         latitude: this.lat,
                         longitude: this.lon,
                         team_id: this.teamId || 0,
-                        spawn: this.raidSpawnTimestamp || 0,
-                        start: this.raidBattleTimestamp || 0,
-                        end: this.raidEndTimestamp || 0,
+                        spawn: Math.round(this.raidSpawnTimestamp || 0),
+                        start: Math.round(this.raidBattleTimestamp || 0),
+                        end: Math.round(this.raidEndTimestamp || 0),
                         level: this.raidLevel || 0,
                         pokemon_id: this.raidPokemonId || 0,
                         cp: this.raidPokemonCp || 0,
@@ -386,7 +386,7 @@ class Gym {
                         ex_raid_eligible: this.exRaidEligible || 0,
                         is_exclusive: this.raidIsExclusive || false,
                         sponsor_id: this.sponsorId || 0,
-                        evolution: this.raidPokemonEvolution || null
+                        evolution: this.raidPokemonEvolution || 0
                     }
                 };
         }
