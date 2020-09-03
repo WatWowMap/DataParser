@@ -40,8 +40,6 @@ class Consumer {
                         timestampMs: wild.timestampMs,
                         wild: wild.data
                     });
-                    await pokemon.update();
-        
                     if (!pokemon.lat && pokemon.pokestopId) {
                         if (!pokemon.pokestopId) {
                             continue;
@@ -62,6 +60,8 @@ class Consumer {
                     if (!pokemon.firstSeenTimestamp) {
                         pokemon.firstSeenTimestamp = new Date().getTime() / 1000;
                     }
+                    await pokemon.update();
+
                     wildSQL.push(pokemon.toSql());
                 } catch (err) {
                     console.error('[Wild] Error:', err);
@@ -135,8 +135,6 @@ class Consumer {
                         //timestampMs: nearbyPokemon.timestamp_ms,
                         nearby: nearby.data
                     });
-                    await pokemon.update();
-        
                     if (!pokemon.lat && pokemon.pokestopId) {
                         if (!pokemon.pokestopId) {
                             continue;
@@ -160,6 +158,8 @@ class Consumer {
                     if (!pokemon.firstSeenTimestamp) {
                         pokemon.firstSeenTimestamp = new Date().getTime() / 1000;
                     }
+                    await pokemon.update();
+
                     nearbySQL.push(pokemon.toSql());
                 } catch (err) {
                     console.error('[Nearby] Error:', err.message);

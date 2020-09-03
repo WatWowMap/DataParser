@@ -7,6 +7,7 @@ const Spawnpoint = require('./spawnpoint.js');
 const MySQLConnector = require('../services/mysql.js');
 //const { PvPStatsManager, IV, League } = require('../services/pvp.js');
 const pvp = require('../services/pvp.js');
+const RedisClient = require('../services/redis.js');
 const WebhookController = require('../services/webhook.js');
 const db = new MySQLConnector(config.db);
 
@@ -547,6 +548,7 @@ class Pokemon {
         // First time seeing Pokemon, send webhook
         if (!oldPokemon) {
             WebhookController.instance.addPokemonEvent(this.toJson());
+            await RedisClient.publish('pokemon_add_queue', JSON.stringify(this));
         }
     }
 

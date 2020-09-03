@@ -57,6 +57,36 @@ class Redis {
             });
         });
     }
+
+    async publish(channel, value) {
+        return new Promise((resolve, reject) => {
+            client.publish(channel, value, (err, reply) => {
+                if (err) {
+                    console.error('[Redis] Error:', err);
+                    return reject(err);
+                }
+                //console.log('[Redis] Reply:', reply);
+                resolve();
+            });
+        });
+    }
+
+    async subscribe(channel) {
+        return new Promise((resolve, reject) => {
+            client.subscribe(channel, (err, reply) => {
+                if (err) {
+                    console.error('[Redis] Error:', err);
+                    return reject(err);
+                }
+                console.log('[Redis] Reply:', reply);
+                resolve();
+            });
+        })
+    }
+
+    async onEvent(event, cb) {
+        client.on(event, cb);
+    }
 }
 
 module.exports = Redis.instance;
