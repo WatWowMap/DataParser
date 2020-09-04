@@ -36,5 +36,6 @@ CREATE TABLE IF NOT EXISTS gym_defender (
 	npc_combat_won smallint DEFAULT 0,
 	npc_combat_total smallint DEFAULT 0,
 	updated int DEFAULT 0,
+	CONSTRAINT `gym_defender_fk_trainer_name` FOREIGN KEY (`trainer_name`) REFERENCES `trainer` (`name`) ON DELETE CASCADE ON UPDATE CASCADE,
 	PRIMARY KEY (id)
 );

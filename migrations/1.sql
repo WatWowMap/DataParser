@@ -25,8 +25,6 @@ CREATE TABLE IF NOT EXISTS `account` (
   `last_encounter_time` int(11) unsigned DEFAULT NULL,
   `spins` smallint(6) unsigned NOT NULL DEFAULT 0,
   `tutorial` tinyint(3) unsigned NOT NULL DEFAULT 0,
-  `last_uuid` varchar(40) DEFAULT NULL,
-  `last_instance` varchar(30) DEFAULT NULL,
   `creation_timestamp_ms` int(11) unsigned DEFAULT NULL,
   `warn` tinyint(1) unsigned DEFAULT NULL,
   `warn_expire_ms` int(11) unsigned DEFAULT NULL,
