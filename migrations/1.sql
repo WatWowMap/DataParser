@@ -35,6 +35,16 @@ CREATE TABLE IF NOT EXISTS `account` (
   PRIMARY KEY (`username`)
 );
 
+--
+-- Table structure for table `instance`
+--
+
+CREATE TABLE IF NOT EXISTS `instance` (
+  `name` varchar(30) NOT NULL,
+  `type` enum('circle_pokemon','circle_raid','circle_smart_raid','auto_quest','pokemon_iv') NOT NULL,
+  `data` longtext NOT NULL,
+  PRIMARY KEY (`name`)
+);
 
 --
 -- Table structure for table `device`
@@ -51,7 +61,8 @@ CREATE TABLE IF NOT EXISTS `device` (
   PRIMARY KEY (`uuid`),
   UNIQUE KEY `uk_iaccount_username` (`account_username`),
   KEY `fk_instance_name` (`instance_name`),
-  CONSTRAINT `fk_account_username` FOREIGN KEY (`account_username`) REFERENCES `account` (`username`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `fk_account_username` FOREIGN KEY (`account_username`) REFERENCES `account` (`username`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_instance_name` FOREIGN KEY (`instance_name`) REFERENCES `instance` (`name`) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 --
