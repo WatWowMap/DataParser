@@ -350,7 +350,8 @@ class Gym {
                         ex_raid_eligible: this.exRaidEligible || 0,
                         is_exclusive: this.raidIsExclusive || false,
                         sponsor_id: this.sponsorId || 0,
-                        evolution: this.raidPokemonEvolution || 0
+                        evolution: this.raidPokemonEvolution || 0,
+                        costume: this.raidPokemonCostume || 0,
                     }
                 };
         }
