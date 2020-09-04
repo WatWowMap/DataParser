@@ -460,35 +460,6 @@ class Pokestop {
                         this.sponsorId
                     ]
                 };
-                /*
-                return `
-                (
-                    '${this.id}',
-                    ${this.lat},
-                    ${this.lon},
-                    ${this.name ? '"' + mysql.escape(this.name) + '"' : null},
-                    ${this.url ? '"' + pokesthistop.url + '"' : null},
-                    ${this.lureExpireTimestamp},
-                    ${this.lastModifiedTimestamp},
-                    ${this.updated},
-                    ${this.enabled},
-                    ${this.questType},
-                    ${this.questTimestamp},
-                    ${this.questTarget},
-                    '${JSON.stringify(this.questConditions)}',
-                    '${JSON.stringify(this.questRewards)}',
-                    '${this.questTemplate}',
-                    ${this.cellId},
-                    ${this.deleted},
-                    ${this.lureId},
-                    ${this.pokestopDisplay},
-                    ${this.incidentExpireTimestamp},
-                    ${this.firstSeenTimestamp},
-                    ${this.gruntType},
-                    ${this.sponsorId}
-                )
-                `;
-                */
             default:
                 return {
                     sql: `
@@ -534,38 +505,6 @@ class Pokestop {
                         this.sponsorId
                     ]
                 };
-                /*
-                return `
-                (
-                    '${this.id}',
-                    ${this.lat},
-                    ${this.lon},
-                    ${this.name ? '"' + mysql.escape(this.name) + '"' : null},
-                    ${this.url ? '"' + this.url + '"' : null},
-                    ${this.lureExpireTimestamp},
-                    ${this.lastModifiedTimestamp},
-                    ${this.updated},
-                    ${this.enabled},
-        
-                    ${this.cellId},
-                    ${this.deleted},
-                    ${this.lureId},
-                    ${this.pokestopDisplay},
-                    ${this.incidentExpireTimestamp},
-                    ${this.firstSeenTimestamp},
-                    ${this.gruntType},
-                    ${this.sponsorId}
-                )
-                `;
-                */
-                /*
-                    ${this.questType},
-                    ${this.questTimestamp},
-                    ${this.questTarget},
-                    ${this.questConditions},
-                    ${this.questRewards},
-                    ${this.questTemplate},
-                */
         }
     }
 

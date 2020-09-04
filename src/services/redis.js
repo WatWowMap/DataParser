@@ -8,7 +8,6 @@ const redisOptions = {
     port: config.redis.port,
     //string_numbers: true,
     //socket_keepalive: true,
-    //password: '',
     //db: null,
     tls: false
 };

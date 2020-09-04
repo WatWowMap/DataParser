@@ -3,6 +3,7 @@
 const POGOProtos = require('pogo-protos');
 //const POGOProtos = require('../POGOProtos.Rpc_pb.js');
 
+const config = require('../config.json');
 const Account = require('../models/account.js');
 const Device = require('../models/device.js');
 const { sendResponse, base64_decode } = require('../services/utils.js');
@@ -131,7 +132,7 @@ class RouteController {
                     try {
                         let fsr = POGOProtos.Networking.Responses.FortSearchResponse.decode(base64_decode(data));
                         if (fsr) {
-                            if (fsr.challenge_quest && fsr.challenge_quest.quest) {
+                            if (config.parse.quests && fsr.challenge_quest && fsr.challenge_quest.quest) {
                                 let quest = fsr.challenge_quest.quest;
                                 quests.push(quest);
                             }
@@ -144,7 +145,7 @@ class RouteController {
                     }
                     break;
                 case RpcMethod.EncounterResponse:
-                    if (trainerLevel >= 30 || isMadData !== false) {
+                    if (config.parse.encounters && trainerLevel >= 30 || isMadData !== false) {
                         try {
                             let er = POGOProtos.Networking.Responses.EncounterResponse.decode(base64_decode(data));
                             if (er && er.status === POGOProtos.Networking.Responses.EncounterResponse.Status.ENCOUNTER_SUCCESS) {
@@ -181,22 +182,24 @@ class RouteController {
                                 return res.sendStatus(400);
                             }
                             mapCellsNew.forEach(mapCell => {
-                                let timestampMs = parseInt(BigInt(mapCell.current_timestamp_ms).toString());
-                                let wildNew = mapCell.wild_pokemons;
-                                wildNew.forEach((wildPokemon) => {
-                                    wildPokemons.push({
-                                        cell: mapCell.s2_cell_id,
-                                        data: wildPokemon,
-                                        timestampMs: timestampMs
+                                if (config.parse.pokemon) {
+                                    let timestampMs = parseInt(BigInt(mapCell.current_timestamp_ms).toString());
+                                    let wildNew = mapCell.wild_pokemons;
+                                    wildNew.forEach((wildPokemon) => {
+                                        wildPokemons.push({
+                                            cell: mapCell.s2_cell_id,
+                                            data: wildPokemon,
+                                            timestampMs: timestampMs
+                                        });
                                     });
-                                });
-                                let nearbyNew = mapCell.nearby_pokemons;
-                                nearbyNew.forEach(nearbyPokemon => {
-                                    nearbyPokemons.push({
-                                        cell: mapCell.s2_cell_id,
-                                        data: nearbyPokemon
+                                    let nearbyNew = mapCell.nearby_pokemons;
+                                    nearbyNew.forEach(nearbyPokemon => {
+                                        nearbyPokemons.push({
+                                            cell: mapCell.s2_cell_id,
+                                            data: nearbyPokemon
+                                        });
                                     });
-                                });
+                                }
                                 let fortsNew = mapCell.forts;
                                 fortsNew.forEach(fort => {
                                     forts.push({
@@ -206,14 +209,16 @@ class RouteController {
                                 });
                                 cells.push(mapCell.s2_cell_id);
                             });
-            
-                            let weather = gmo.client_weather;
-                            weather.forEach(wmapCell => {
-                                clientWeathers.push({
-                                    cell: wmapCell.s2_cell_id,
-                                    data: wmapCell
+
+                            if (config.parse.weather) {
+                                let weather = gmo.client_weather;
+                                weather.forEach(wmapCell => {
+                                    clientWeathers.push({
+                                        cell: wmapCell.s2_cell_id,
+                                        data: wmapCell
+                                    });
                                 });
-                            });
+                            }
             
                             if (wildPokemons.length === 0 && nearbyPokemons.length === 0 && forts.length === 0) {
                                 cells.forEach(cell => {
