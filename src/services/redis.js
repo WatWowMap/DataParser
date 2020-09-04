@@ -46,7 +46,7 @@ class Redis {
 
     async hset(key, field, value) {
         return new Promise(async (resolve, reject) => {
-            client.hset(key, field, value, (err, reply) => {
+            client.hset(key, field, JSON.stringify(value), (err, reply) => {
                 if (err) {
                     console.error('[Redis] Error:', err);
                     return reject(err);
