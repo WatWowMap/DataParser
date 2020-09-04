@@ -14,6 +14,9 @@ const QuestReward = {
     AvatarClothing: 5,
     Quest: 6,
     PokemonEncounter: 7,
+    Pokecoin: 8,
+    Sticker: 11,
+    MegaResource: 12,
 };
 
 const ConditionType = {
@@ -379,7 +382,14 @@ class Pokestop {
                 case QuestReward.Stardust:
                     infoData['amount'] = reward.stardust;
                     break;
+                case QuestReward.MegaResource:
+                    infoData['amount'] = reward.amount;
+                    infoData['pokemon_id'] = reward.pokemon_id;
+                    break;
                 case QuestReward.Unset:
+                    break;
+                default:
+                    console.warn('Unrecognized reward.type', reward.type);
                     break;
             }
             rewardData['info'] = infoData;

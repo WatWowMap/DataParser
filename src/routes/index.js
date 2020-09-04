@@ -148,9 +148,9 @@ class RouteController {
                     if (config.parse.encounters && trainerLevel >= 30 || isMadData !== false) {
                         try {
                             let er = POGOProtos.Networking.Responses.EncounterResponse.decode(base64_decode(data));
-                            if (er) {
+                            if (er && er.status === POGOProtos.Networking.Responses.EncounterResponse.Status.ENCOUNTER_SUCCESS) {
                                 encounters.push(er);
-                            } else {
+                            } else if (!er) {
                                 console.error('[Raw] Malformed EncounterResponse');
                             }
                         } catch (err) {
@@ -183,7 +183,7 @@ class RouteController {
                             }
                             mapCellsNew.forEach(mapCell => {
                                 if (config.parse.pokemon) {
-                                    let timestampMs = mapCell.current_timestamp_ms;
+                                    let timestampMs = parseInt(BigInt(mapCell.current_timestamp_ms).toString());
                                     let wildNew = mapCell.wild_pokemons;
                                     wildNew.forEach((wildPokemon) => {
                                         wildPokemons.push({

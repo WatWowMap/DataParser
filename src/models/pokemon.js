@@ -7,6 +7,7 @@ const Spawnpoint = require('./spawnpoint.js');
 const MySQLConnector = require('../services/mysql.js');
 //const { PvPStatsManager, IV, League } = require('../services/pvp.js');
 const pvp = require('../services/pvp.js');
+const RedisClient = require('../services/redis.js');
 const WebhookController = require('../services/webhook.js');
 const db = new MySQLConnector(config.db);
 
@@ -95,7 +96,7 @@ class Pokemon {
         }
         this.username = data.wild.username;
         if (data.wild.time_till_hidden_ms > 0 && data.wild.time_till_hidden_ms <= 90000) {
-            this.expireTimestamp = Math.round((timestampMs + data.wild.time_till_hidden_ms) / 1000);
+            this.expireTimestamp = Math.round((data.timestampMs + data.wild.time_till_hidden_ms) / 1000);
             this.expireTimestampVerified = true;
         } else {
             this.expireTimestampVerified = false;
@@ -115,7 +116,7 @@ class Pokemon {
                     this.expireTimestampVerified = true;
                 }
             } else {
-                spawnpoint = new Spawnpoint(this.spawnId, this.lat, this.lon, null, Math.round(timestampMs / 1000));
+                spawnpoint = new Spawnpoint(this.spawnId, this.lat, this.lon, null, Math.round(data.timestampMs / 1000));
                 await spawnpoint.save(false);
                 this.expireTimestamp = null;
             }
@@ -547,6 +548,7 @@ class Pokemon {
         // First time seeing Pokemon, send webhook
         if (!oldPokemon) {
             WebhookController.instance.addPokemonEvent(this.toJson());
+            await RedisClient.publish('pokemon_add_queue', JSON.stringify(this));
         }
     }
 
