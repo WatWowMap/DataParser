@@ -52,14 +52,14 @@ class Account {
         this.wasSuspended = playerData.was_suspended;
         this.banned = playerData.banned;
 
-        if (playerData.warn && !failed) {
+        if (playerData.warn && !this.failed) {
             this.failed = 'GPR_RED_WARNING';
             let ts = new Date().getTime() / 1000;
             if (!this.firstWarningTimestamp) {
                 this.firstWarningTimestamp = ts;
             }
             this.failedTimestamp = ts;
-            console.debug(`[Account] Account Name: ${self.username} - Username: ${playerData.player_data.username} - Red Warning: ${playerData.warn}`);
+            console.debug(`[Account] Account Name: ${this.username} - Username: ${playerData.player_data.username} - Red Warning: ${playerData.warn}`);
         }
         if (playerData.banned) {
             this.failed = 'GPR_BANNED';
@@ -73,7 +73,7 @@ class Account {
      * @param minLevel 
      * @param maxLevel 
      */
-    static async getNewAccount(minLevel, maxLevel, hasTicket) {
+    static async getNewAccount(minLevel, maxLevel) {
         let sql = `
         SELECT username, password, level, first_warning_timestamp, failed_timestamp, failed, last_encounter_lat, last_encounter_lon, last_encounter_time
         FROM account
@@ -124,7 +124,7 @@ class Account {
                 return null;
             });
         if (results && results.length > 0) {
-            const result = results[i];
+            const result = results[0];
             return new Account(
                 result.username,
                 result.password,
@@ -160,7 +160,7 @@ class Account {
                 console.error('[Account] Failed to set encounter info for account with username', username, 'Error:', err);
                 return null;
             });
-            console.log('[Account] DidEncounter:', result);
+        console.log('[Account] DidEncounter:', result);
     }
 
     /**

@@ -218,13 +218,13 @@ const queryPvPRank = async (pokemonId, formId, attack, defense, stamina, level, 
         form = 0;
     }
     const key = league + '_league';
-    const field = `${pokemonId}-${formId}-${attack}-${defense}-${stamina}`;
+    const field = `${pokemonId}-${form}-${attack}-${defense}-${stamina}`;
     const stats = await redisClient.hget(key, field);
     if (stats && stats.level > level) {
         return stats;
     }
     return null;
-}
+};
 
 module.exports = {
     calculatePossibleCPs

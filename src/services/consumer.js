@@ -213,7 +213,7 @@ class Consumer {
                 pvp_rankings_ultra_league=VALUES(pvp_rankings_ultra_league)
                 `;
                 try {
-                let result = await db.query(sqlUpdate);
+                    let result = await db.query(sqlUpdate);
                 //console.log('[Nearby] Result:', result.affectedRows);
                 } catch (err) {
                     console.error('[Nearby] Error:', err.message);
@@ -737,7 +737,7 @@ class Consumer {
                         coverer.setMaxLevel(15);
                         let cellIds = coverer.getCoveringCells(circle);
                         let cellId = cellIds.pop();
-                        //if (cellId) {
+                        if (cellId) {
                             pokemon = new Pokemon({
                                 wild: encounter.wild_pokemon,
                                 username: this.username,
@@ -745,7 +745,7 @@ class Consumer {
                                 timestampMs: parseInt(BigInt(encounter.wild_pokemon.last_modified_timestamp_ms).toString()) //last_modified_timestamp_ms / timestamp_ms
                             });
                             await pokemon.addEncounter(encounter, this.username);
-                        //}
+                        }
                     }
                     if (!pokemon.spawnId) {
                         pokemon.spawnId = parseInt(encounter.wild_pokemon.spawn_point_id, 16);
@@ -824,7 +824,8 @@ class Consumer {
                 let pokestop;
                 try {
                     pokestop = await Pokestop.getById(quest.fort_id);
-                } catch {
+                } catch (err) {
+                    console.error('[Quest] Error:', err);
                     pokestop = null;
                 }
                 if (pokestop instanceof Pokestop) {
@@ -893,7 +894,8 @@ class Consumer {
                     let account;
                     try {
                         account = await Account.getWithUsername(this.username);
-                    } catch {
+                    } catch (err) {
+                        console.error('[Account] Error:', err);
                         account = null;
                     }
                     if (account instanceof Account) {

@@ -70,7 +70,7 @@ const run = async () => {
     }
 };
 
-run().then(x => {
+run().then(() => {
     console.log('Initialized');
 }).catch(err => {
     console.error('Error:', err);

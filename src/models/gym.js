@@ -6,10 +6,10 @@ const WebhookController = require('../services/webhook.js');
 const db = new MySQLConnector(config.db);
 
 const PokemonEvolution = {
-	Unset: 0,
-	Mega: 1,
-	MegaX: 2,
-	MegaY: 3
+    Unset: 0,
+    Mega: 1,
+    MegaX: 2,
+    MegaY: 3
 };
 
 /**
@@ -195,10 +195,10 @@ class Gym {
                 this.raidEndTimestamp = oldGym.raidEndTimestamp;
             }
             if (this.raidSpawnTimestamp > 0 && (
-                    oldGym.raidLevel !== this.raidLevel ||
-                    oldGym.raidPokemonId !== this.raidPokemonId ||
-                    oldGym.raidSpawnTimestamp !== this.raidSpawnTimestamp
-                )) {
+                oldGym.raidLevel !== this.raidLevel ||
+                oldGym.raidPokemonId !== this.raidPokemonId ||
+                oldGym.raidSpawnTimestamp !== this.raidSpawnTimestamp
+            )) {
                 let raidBattleTime = new Date((this.raidBattleTimestamp || 0) * 1000);
                 let raidEndTime = new Date((this.raidEndTimestamp || 0) * 1000);
                 let now = new Date().getTime() / 1000;
@@ -291,15 +291,15 @@ class Gym {
      */
     toJson(type) {
         switch (type) {
-            case "gym":
+            case 'gym':
                 return {
-                    type: "gym",
+                    type: 'gym',
                     message: {
                         gym_id: this.id,
-                        gym_name: this.name || "Unknown",
+                        gym_name: this.name || 'Unknown',
                         latitude: this.lat,
                         longitude: this.lon,
-                        url: this.url || "",
+                        url: this.url || '',
                         enabled: this.enabled || true,
                         team_id: this.teamId || 0,
                         last_modified: this.lastModifiedTimestamp || 0,
@@ -310,13 +310,13 @@ class Gym {
                         sponsor_id: this.sponsorId || 0
                     }
                 };
-            case "gym-info":
+            case 'gym-info':
                 return {
-                    type: "gym_details",
+                    type: 'gym_details',
                     message: {
                         id: this.id,
-                        name: this.name || "Unknown",
-                        url: this.url || "",
+                        name: this.name || 'Unknown',
+                        url: this.url || '',
                         latitude: this.lat,
                         longitude: this.lon,
                         team: this.teamId || 0,
@@ -326,14 +326,14 @@ class Gym {
                         sponsor_id: this.sponsorId || 0
                     }
                 };
-            case "egg":
-            case "raid":
+            case 'egg':
+            case 'raid':
                 return {
-                    type: "raid",
+                    type: 'raid',
                     message: {
                         gym_id: this.id,
-                        gym_name: this.name || "Unknown",
-                        gym_url: this.url || "",
+                        gym_name: this.name || 'Unknown',
+                        gym_url: this.url || '',
                         latitude: this.lat,
                         longitude: this.lon,
                         team_id: this.teamId || 0,

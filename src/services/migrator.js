@@ -118,7 +118,7 @@ class Migrator {
                     console.error(`[DBController] Migration failed: ${err}`);
                     process.exit(-1);
                 });
-                console.log('[DBController] Migration successful');
+            console.log('[DBController] Migration successful');
             this.migrate(newVersion, toVersion);
         }
         if (fromVersion === toVersion) {
