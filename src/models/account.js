@@ -218,22 +218,41 @@ class Account {
      * Save account.
      * @param update 
      */
-    async save(update) {
+    async save() {
         const sql = `
-        INSERT INTO account (username, password, level, first_warning_timestamp, failed_timestamp, failed, last_encounter_lat, last_encounter_lon, last_encounter_time)
+        INSERT INTO account (
+            username, password, level, first_warning_timestamp, failed_timestamp, failed,
+            last_encounter_lat, last_encounter_lon, last_encounter_time, spins, tutorial,
+            creation_timestamp_ms, warn, warn_expire_ms, warn_message_acknowledged,
+            suspended_message_acknowledged, was_suspended, banned
+        )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE UPDATE
-        username=VALUES(username),
-        password=VALUES(password),
-        level=VALUES(level),
-        first_warning_timestamp=VALUES(first_warning_timestamp),
-        failed_timestamp=VALUES(failed_timestamp),
-        failed=VALUES(failed),
-        last_encounter_lat=VALUES(last_encounter_lat),
-        last_encounter_lon=VALUES(last_encounter_lon),
-        last_encounter_time=VALUES(last_encounter_time)
+            username=VALUES(username),
+            password=VALUES(password),
+            level=VALUES(level),
+            first_warning_timestamp=VALUES(first_warning_timestamp),
+            failed_timestamp=VALUES(failed_timestamp),
+            failed=VALUES(failed),
+            last_encounter_lat=VALUES(last_encounter_lat),
+            last_encounter_lon=VALUES(last_encounter_lon),
+            last_encounter_time=VALUES(last_encounter_time),
+            spins=VALUES(spins),
+            tutorial=VALUES(tutorial),
+            creation_timestamp_ms=VALUES(creation_timestamp_ms),
+            warn=VALUES(warn),
+            warn_expire_ms=VALUES(warn_expire_ms),
+            warn_message_acknowledged=VALUES(warn_message_acknowledged),
+            suspended_message_acknowledged=VALUES(suspended_message_acknowledged),
+            was_suspended=VALUES(was_suspended),
+            banned=VALUES(banned)
         `;
-        const args = [this.username, this.password, this.level, this.firstWarningTimestamp, this.failedTimestamp, this.failed, this.lastEncounterLat, this.lastEncounterLon, this.lastEncounterTime];
+        const args = [
+            this.username, this.password, this.level, this.firstWarningTimestamp, this.failedTimestamp, this.failed,
+            this.lastEncounterLat, this.lastEncounterLon, this.lastEncounterTime, this.spins, this.tutorial,
+            this.creationTimestampMs, this.warn, this.warnExpireTimestamp, this.warnMessageAcknowledged,
+            this.suspendedMessageAcknowledged, this.wasSuspended, this.banned
+        ];
         let result = await db.query(sql, args)
             .then(x => x)
             .catch(err => {
