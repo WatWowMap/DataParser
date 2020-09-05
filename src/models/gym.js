@@ -6,10 +6,10 @@ const WebhookController = require('../services/webhook.js');
 const db = new MySQLConnector(config.db);
 
 const PokemonEvolution = {
-	Unset: 0,
-	Mega: 1,
-	MegaX: 2,
-	MegaY: 3
+    Unset: 0,
+    Mega: 1,
+    MegaX: 2,
+    MegaY: 3
 };
 
 /**

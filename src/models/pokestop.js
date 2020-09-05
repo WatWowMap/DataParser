@@ -327,7 +327,7 @@ class Pokestop {
                 case ConditionType.DailyBuddyAffection:
                     infoData['min_buddy_affection_earned_today'] = info.daily_buddy_affection.min_buddy_affection_earned_today;
                     break;
-	            case ConditionType.MegaEvoPokemon:
+                case ConditionType.MegaEvoPokemon:
                     infoData['raid_pokemon_evolutions'] = info.with_mega_evo_pokemon.pokemon_evolution.map(x => parseInt(x));
                     break;
                 case ConditionType.WinGymBattleStatus: break;
@@ -389,7 +389,7 @@ class Pokestop {
                     infoData['amount'] = reward.stardust;
                     break;
                 case QuestReward.MegaResource:
-	                infoData['amount'] = reward.mega_resource.amount;
+                    infoData['amount'] = reward.mega_resource.amount;
                     infoData['pokemon_id'] = reward.mega_resource.pokemon_id;
                     break;
                 case QuestReward.Unset:
