@@ -185,36 +185,6 @@ class Account {
     }
 
     /**
-     * Get Account object as sql string
-     */
-    toSql() {
-        return `
-        (
-            '${this.username}',
-            '${this.password}',
-            ${this.firstWarningTimestamp},                        
-            ${this.failedTimestamp},
-            ${this.failed},
-            ${this.level},
-            ${this.last_encounter_lat},
-            ${this.last_encounter_lon},
-            ${this.last_encounter_time},
-            ${this.spins},
-            ${this.tutorial},
-            ${this.creationTimestampMs},
-            ${this.warn},
-            ${this.warnExpireMs},
-            ${this.warnMessageAcknowledged},
-            ${this.suspendedMessageAcknowledged},
-            ${this.wasSuspended},
-            ${this.banned},
-            ${this.creationTimestamp},
-            ${this.warnExpireTimestamp}
-        )
-        `;
-    }
-
-    /**
      * Save account.
      * @param update 
      */
@@ -228,7 +198,6 @@ class Account {
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE UPDATE
-            username=VALUES(username),
             password=VALUES(password),
             level=VALUES(level),
             first_warning_timestamp=VALUES(first_warning_timestamp),
@@ -260,6 +229,36 @@ class Account {
                 return null;
             });
         //console.log('[Account] Save:', result)
+    }
+
+    /**
+     * Get Account object as sql string
+     */
+    toSql() {
+        return `
+        (
+            '${this.username}',
+            '${this.password}',
+            ${this.firstWarningTimestamp},                        
+            ${this.failedTimestamp},
+            ${this.failed},
+            ${this.level},
+            ${this.last_encounter_lat},
+            ${this.last_encounter_lon},
+            ${this.last_encounter_time},
+            ${this.spins},
+            ${this.tutorial},
+            ${this.creationTimestampMs},
+            ${this.warn},
+            ${this.warnExpireMs},
+            ${this.warnMessageAcknowledged},
+            ${this.suspendedMessageAcknowledged},
+            ${this.wasSuspended},
+            ${this.banned},
+            ${this.creationTimestamp},
+            ${this.warnExpireTimestamp}
+        )
+        `;
     }
 }
 

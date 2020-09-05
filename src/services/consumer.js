@@ -890,6 +890,10 @@ class Consumer {
             let playerDataSQL = [];
             for (let i = 0; i < playerData.length; i++) {
                 let data = playerData[i];
+                if (!data || !data.player_data) {
+                    // Don't try and process empty data
+                    continue;
+                }
                 try {
                     let account;
                     try {
@@ -936,9 +940,7 @@ class Consumer {
                     warn_message_acknowledged=VALUES(warn_message_acknowledged),
                     suspended_message_acknowledged=VALUES(suspended_message_acknowledged),
                     was_suspended=VALUES(was_suspended),
-                    banned=VALUES(banned),
-                    creation_timestamp=VALUES(creation_timestamp),
-                    warn_expire_timestamp=VALUES(warn_expire_timestamp)
+                    banned=VALUES(banned)
                 `;
                 let result = await db.query(sqlUpdate);
                 console.log('[PlayerData] Result:', result.affectedRows);

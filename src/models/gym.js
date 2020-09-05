@@ -149,14 +149,14 @@ class Gym {
         let ts = new Date().getTime() / 1000;
         let oldGym;
         try {
-            oldGym = await Gym.getById(this.id, true);
+            oldGym = await this.getById(this.id, true);
         } catch (err) {
             oldGym = null;
         }
         
-        if (this.raidIsExclusive && Gym.exRaidBossId) {
-            this.raidPokemonId = Gym.exRaidBossId;
-            this.raidPokemonForm = Gym.exRaidBossForm || 0;
+        if (this.raidIsExclusive && this.exRaidBossId) {
+            this.raidPokemonId = this.exRaidBossId;
+            this.raidPokemonForm = this.exRaidBossForm || 0;
         }
         
         this.updated = ts;
