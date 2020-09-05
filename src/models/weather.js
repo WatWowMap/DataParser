@@ -67,7 +67,7 @@ class Weather {
         return {
             type: "weather",
             message: {
-                id: this.id,
+                s2_cell_id: this.id,
                 level: this.level,
                 latitude: this.latitude,
                 longitude: this.longitude,
