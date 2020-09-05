@@ -1,5 +1,7 @@
 'use strict';
 
+const POGOProtos = require('pogo-protos');
+
 const config = require('../config.json');
 const MySQLConnector = require('../services/mysql.js');
 const WebhookController = require('../services/webhook.js');
@@ -78,10 +80,10 @@ class Pokestop {
             this.enabled = data.fort.enabled;
             let lastModifiedTimestamp = data.fort.last_modified_timestamp_ms / 1000;
             if (data.fort.active_fort_modifier && data.fort.active_fort_modifier.length > 0) {
-                if (data.fort.active_fort_modifier.includes(501) ||
-                    data.fort.active_fort_modifier.includes(502) ||
-                    data.fort.active_fort_modifier.includes(503) ||
-                    data.fort.active_fort_modifier.includes(504)) {
+                if (data.fort.active_fort_modifier.includes(POGOProtos.Inventory.Item.ItemId.ITEM_TROY_DISK) ||
+                    data.fort.active_fort_modifier.includes(POGOProtos.Inventory.Item.ItemId.ITEM_TROY_DISK_GLACIAL) ||
+                    data.fort.active_fort_modifier.includes(POGOProtos.Inventory.Item.ItemId.ITEM_TROY_DISK_MAGNETIC) ||
+                    data.fort.active_fort_modifier.includes(POGOProtos.Inventory.Item.ItemId.ITEM_TROY_DISK_MOSSY)) {
                     this.lureExpireTimestamp = lastModifiedTimestamp + Pokestop.LureTime;
                     this.lureId = data.fort.active_fort_modifier[0];
                 }
