@@ -65,7 +65,7 @@ class Weather {
             polygon.push([ vertex.x, vertex.y ]);
         }
         return {
-            type: "weather",
+            type: 'weather',
             message: {
                 s2_cell_id: this.id,
                 level: this.level,

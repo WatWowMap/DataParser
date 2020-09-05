@@ -136,17 +136,17 @@ class Device {
      * @param oldUUID 
      */
     async save(oldUUID = '') {
-       let sql = `
-       UPDATE device 
-       SET uuid = ?, instance_name = ?, account_username = ?, last_host = ?, last_seen = ?, last_lat = ?, last_lon = ?
-       WHERE uuid = ?
-       `;
-       let args = [this.uuid, this.instanceName, this.accountUsername, this.lastHost, this.lastSeen || 0, this.lastLat || 0, this.lastLon || 0, oldUUID];
-       let results = await db.query(sql, args)
-           .then(x => x)
-           .catch(err => {
-               console.error('[Device] Error:', err);
-           });
+        let sql = `
+        UPDATE device 
+        SET uuid = ?, instance_name = ?, account_username = ?, last_host = ?, last_seen = ?, last_lat = ?, last_lon = ?
+        WHERE uuid = ?
+        `;
+        let args = [this.uuid, this.instanceName, this.accountUsername, this.lastHost, this.lastSeen || 0, this.lastLat || 0, this.lastLon || 0, oldUUID];
+        let results = await db.query(sql, args)
+            .then(x => x)
+            .catch(err => {
+                console.error('[Device] Error:', err);
+            });
         //console.log('[Device] Save:', results);
     }
 }
