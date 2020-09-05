@@ -30,7 +30,11 @@ class Gym {
             this.enabled = data.fort.enabled;
             this.guardingPokemonId = data.fort.guard_pokemon_id;
             this.teamId = data.fort.owned_by_team;
-            this.availableSlots = data.fort.gym_display.slots_available; // TODO: No slots available?
+            if (data.fort.gym_display) {
+                this.availableSlots = data.fort.gym_display.slots_available; // TODO: No slots available?
+            } else {
+                this.availableSlots = 0;
+            }
             this.lastModifiedTimestamp = data.fort.last_modified_timestamp_ms / 1000;
             this.exRaidEligible = data.fort.is_ex_raid_eligible;
             this.inBattle = data.fort.is_in_battle;

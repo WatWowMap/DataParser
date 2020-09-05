@@ -16,6 +16,7 @@ const instances = config.clusters || 4;
 // TODO: Loop redis insert into mysql
 
 const run = async () => {
+    // Check if cluster node is master or child
     if (cluster.isMaster) {
         console.log(`[Cluster] Master ${process.pid} is running`);
 
