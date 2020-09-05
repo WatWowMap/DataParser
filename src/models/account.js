@@ -224,14 +224,14 @@ class Account {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE UPDATE
         username=VALUES(username),
-        username=VALUES(password),
-        username=VALUES(level),
-        username=VALUES(first_warning_timestamp),
-        username=VALUES(failed_timestamp),
-        username=VALUES(failed),
-        username=VALUES(last_encounter_lat),
-        username=VALUES(last_encounter_lon),
-        username=VALUES(last_encounter_time)
+        password=VALUES(password),
+        level=VALUES(level),
+        first_warning_timestamp=VALUES(first_warning_timestamp),
+        failed_timestamp=VALUES(failed_timestamp),
+        failed=VALUES(failed),
+        last_encounter_lat=VALUES(last_encounter_lat),
+        last_encounter_lon=VALUES(last_encounter_lon),
+        last_encounter_time=VALUES(last_encounter_time)
         `;
         const args = [this.username, this.password, this.level, this.firstWarningTimestamp, this.failedTimestamp, this.failed, this.lastEncounterLat, this.lastEncounterLon, this.lastEncounterTime];
         let result = await db.query(sql, args)
