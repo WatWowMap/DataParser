@@ -383,8 +383,8 @@ class Pokestop {
                     infoData['amount'] = reward.stardust;
                     break;
                 case QuestReward.MegaResource:
-                    infoData['amount'] = reward.amount;
-                    infoData['pokemon_id'] = reward.pokemon_id;
+                    infoData['amount'] = reward.mega_resource.amount;
+                    infoData['pokemon_id'] = reward.mega_resource.pokemon_id;
                     break;
                 case QuestReward.Unset:
                     break;
