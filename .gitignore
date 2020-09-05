@@ -106,4 +106,6 @@ dist
 # Config Data
 config.json
 
+.DS_Store
+
 pogo-protos
