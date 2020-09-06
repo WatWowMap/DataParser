@@ -142,8 +142,8 @@ class Pokestop {
             this.questType = data.quest_type || null;
             this.questTarget = data.quest_target || null;
             this.questTimestamp = data.quest_timestamp || null;
-            this.questConditions = data.quest_conditions || null;
-            this.questRewards = data.quest_rewards || null;
+            this.questConditions = JSON.parse(data.quest_conditions) || null;
+            this.questRewards = JSON.parse(data.quest_rewards) || null;
             this.questTemplate = data.quest_template || null;
     
             this.cellId = data.cell_id;
