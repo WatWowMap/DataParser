@@ -28,6 +28,7 @@
     "webhooks": {
         "enabled": false,
         "urls": ["http://127.0.0.1:9001"],
-        "delay": 5
+        "delay": 5,
+        "retryCount": 5
     }
 }
