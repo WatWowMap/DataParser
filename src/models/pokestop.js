@@ -159,7 +159,7 @@ class Pokestop {
 
     /**
      * Get Pokestop by Pokestop id.
-     * @param encounterId 
+     * @param id
      */
     static async getById(id) {
         let sql = `
@@ -236,7 +236,7 @@ class Pokestop {
         }
     }
 
-        /**
+    /**
      * Add quest proto data to pokestop.
      * @param quest 
      */

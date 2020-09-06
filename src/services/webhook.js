@@ -7,17 +7,19 @@ const config = require('../config.json');
  * WebhookController relay class.
  */
 class WebhookController {
-    static instance = new WebhookController(config.webhooks.urls, config.webhooks.delay);
+    static instance = new WebhookController(config.webhooks.urls, config.webhooks.delay, config.webhooks.retryCount);
 
     /**
      * Initialize new WebhookController object.
-     * @param {*} urls 
-     * @param {*} delay 
+     * @param {*} urls
+     * @param {number} delay
+     * @param {number} retryCount
      */
-    constructor(urls, delay = 5) {
+    constructor(urls, delay = 5, retryCount) {
         console.info('[WebhookController] Starting up...');
         this.urls = urls;
         this.delay = delay;
+        this.retryCount = retryCount;
         this.pokemonEvents = [];
         this.pokestopEvents = [];
         this.lureEvents = [];
@@ -69,7 +71,7 @@ class WebhookController {
 
     /**
      * Add Pokestop lure event json to pokestop lure events queue
-     * @param {*} pokemon 
+     * @param {*} pokestop
      */
     addLureEvent(pokestop) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
@@ -80,7 +82,7 @@ class WebhookController {
 
     /**
      * Add Pokestop invasion event json to pokestop invasion events queue
-     * @param {*} pokemon 
+     * @param {*} pokestop
      */
     addInvasionEvent(pokestop) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
@@ -91,7 +93,7 @@ class WebhookController {
 
     /**
      * Add Pokestop quest event json to pokestop quest events queue
-     * @param {*} pokemon 
+     * @param {*} pokestop
      */
     addQuestEvent(pokestop) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
@@ -102,7 +104,7 @@ class WebhookController {
 
     /**
      * Add Gym event json to gym events queue
-     * @param {*} pokemon 
+     * @param {*} gym
      */
     addGymEvent(gym) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
@@ -113,7 +115,7 @@ class WebhookController {
 
     /**
      * Add Gym info/details event json to gym info events queue
-     * @param {*} pokemon 
+     * @param {*} gym
      */
     addGymInfoEvent(gym) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
@@ -124,7 +126,7 @@ class WebhookController {
 
     /**
      * Add raid egg event json to egg events queue
-     * @param {*} pokemon 
+     * @param {*} gym
      */
     addEggEvent(gym) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
@@ -135,7 +137,7 @@ class WebhookController {
 
     /**
      * Add raid boss event json to raid events queue
-     * @param {*} pokemon 
+     * @param {*} gym
      */
     addRaidEvent(gym) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
@@ -146,7 +148,7 @@ class WebhookController {
 
     /**
      * Add Weather event json to weather events queue
-     * @param {*} pokemon 
+     * @param {*} weather
      */
     addWeatherEvent(weather) {
         if (!config.webhooks.enabled || this.urls.length === 0) {
@@ -259,21 +261,21 @@ class WebhookController {
                 events.push(weatherEvent);
             }
         }
-        
 
         // Check if any events in the array
         if (events.length > 0) {
             // Send the events to each webhook
-            this.urls.forEach(url => this.sendEvents(events, url));
+            this.urls.forEach(url => this.sendEvents(events, url, 0));
         }
     }
 
     /**
      * Send the webhook events to the provided webhook endpoint
-     * @param {*} events 
-     * @param {*} url 
+     * @param {*} events
+     * @param {string} url
+     * @param {number} retryCount
      */
-    sendEvents(events, url) {
+    sendEvents(events, url, retryCount) {
         // If events is not set, skip..
         if (!events) {
             return;
@@ -295,9 +297,12 @@ class WebhookController {
             .then(x => console.log('[WebhookController] Webhook event with', events.length, 'payloads sent to', url))
             .catch(err => {
                 if (err) {
-                    console.error('[WebhookController] Error occurred, trying again:', err);
-                    this.sendEvents(events, url);
-                    return;
+                    if (retryCount < this.retryCount) {
+                        console.error('[WebhookController] Error occurred, trying again:', err);
+                        this.sendEvents(events, url, retryCount++);
+                    } else {
+                        console.error('[WebhookController] Error occurred, max retry count reached:', err);
+                    }
                 }
             });
     }
