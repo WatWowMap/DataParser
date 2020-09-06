@@ -289,14 +289,11 @@ class Pokestop {
                 case ConditionType.WinRaidStatus:
                     break;
                 case ConditionType.ThrowType:
-                    if (info.with_throw_type.throw_type > 0) {
-                        infoData['throw_type_id'] = info.with_throw_type.throw_type;
-                    }
-                    break;
                 case ConditionType.ThrowTypeInARow:
                     if (info.with_throw_type.throw_type > 0) {
                         infoData['throw_type_id'] = info.with_throw_type.throw_type;
                     }
+                    infoData['hit'] = info.with_throw_type.hit
                     break;
                 case ConditionType.Location:
                     infoData['cell_ids'] = info.s2_cell_id;
@@ -316,7 +313,7 @@ class Pokestop {
                     break;
                 case ConditionType.PvpCombat:
                     infoData['win'] = info.with_pvp_combat.requires_win || false; // TODO: requires_win exists?
-                    infoData['trainer_ids'] = info.with_pvp_combat.combat_league_template_id;
+                    infoData['template_ids'] = info.with_pvp_combat.combat_league_template_id;
                     break;
                 case ConditionType.Buddy:
                     if (info.with_buddy) {
