@@ -63,8 +63,7 @@ Raw data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/
 ```
 
 ## Updating  
-1.) `git pull`  
-2.) `git update`  
+1.) `git pull`   
 3.) `npm install`  
 
 ## Discord  
