@@ -65,8 +65,8 @@ class Pokemon {
             this.capture1 = data.capture_1;
             this.capture2 = data.capture_2;
             this.capture3 = data.capture_3;
-            this.pvpRankingsGreatLeague = data.pvp_rankings_great_league || null;
-            this.pvpRankingsUltraLeague = data.pvp_rankings_ultra_league || null;
+            this.pvpRankingsGreatLeague = JSON.parse(data.pvp_rankings_great_league) || null;
+            this.pvpRankingsUltraLeague = JSON.parse(data.pvp_rankings_ultra_league) || null;
         }
         if (!this.firstSeenTimestamp) {
             this.firstSeenTimestamp = new Date().getTime() / 1000;
