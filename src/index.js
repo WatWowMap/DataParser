@@ -3,7 +3,6 @@
 const cluster = require('cluster');
 const express = require('express');
 const helmet = require('helmet');
-const path = require('path');
 const app = express();
 
 const config = require('./config.json');
