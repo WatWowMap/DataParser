@@ -25,6 +25,7 @@
     "express": "^4.17.1",
     "express-status-monitor": "^1.3.3",
     "google-protobuf": "^3.13.0",
+    "helmet": "^4.1.0",
     "mysql": "^2.18.1",
     "nodes2ts": "^2.0.0",
     "pogo-protos": "git+https://github.com/Furtif/pogo-protos.git",

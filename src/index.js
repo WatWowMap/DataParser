@@ -2,6 +2,7 @@
 
 const cluster = require('cluster');
 const express = require('express');
+const helmet = require('helmet');
 const app = express();
 
 const config = require('./config.json');
@@ -52,9 +53,14 @@ const run = async () => {
         const RouteController = require('./routes/index.js');
         const routes = new RouteController();
 
+        // Basic security protection middleware
+        app.use(helmet());
+
+        // Body parsing middleware
         app.use(express.json({ limit: '50mb' }));
         //app.use(require('express-status-monitor')()); //http://ip:port/status
 
+        // Parsing routes
         app.get('/', (req, res) => res.send('OK'));
         app.post('/', (req, res) => {
             const body = req.body;
