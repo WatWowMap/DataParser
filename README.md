@@ -11,7 +11,7 @@ Raw data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/
 2.) Install dependencies `npm install`  
 3.) Copy config `cp src/config.example.json src/config.json`  
 4.) Fill out config `vi src/config.json` (listening port, instances, db info, etc)  
-5.) Create PvP stat tables, run `npm run create-pvp-tables`
+5.) Create PvP stat tables, run `npm run create-pvp-tables`  
 6.) Run `npm run start` (Database tables will be created if they don't exist)  
 7.) Point `data_endpoint` config property in [DeviceConfigManager](https://github.com/versx/DeviceConfigManager) to `http://dataparser_ip:9001`  
 
@@ -41,6 +41,23 @@ Raw data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/
         // Database pool maximum connection limit
         "connectionLimit": 1000
     },
+    // Determine what type of data to parse
+    "parse": {
+        // Wild and nearby Pokemon
+        "pokemon": true,
+        // Pokemon encounters
+        "encounters": true,
+        // Gym forts and details
+        "gym": true,
+        // Pokestop forts and details
+        "pokestops": true,
+        // Field research quests
+        "quests": true,
+        // Gym defenders and trainers
+        "gymDefenders": true,
+        // Weather cells
+        "weather": true
+    },
     // Redis server settings (used for saving PvP ranks)
     "redis": {
         // Redis host IP address/host
@@ -57,7 +74,9 @@ Raw data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/
         // Webhook endpoints
         "urls": ["http://127.0.0.1:9001"],
         // Webhook delay before sending next payload
-        "delay": 5
+        "delay": 5,
+        // Maximum retry count for failed webhooks
+        "retryCount": 5
     }
 }
 ```
