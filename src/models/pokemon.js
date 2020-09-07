@@ -122,7 +122,7 @@ class Pokemon {
             }
         }
         if (data.wild.cell === undefined || data.wild.cell === null) {
-            data.wild.cell = Cell.getCellIdFromLatLon(this.lat, this.lon);
+            this.cellId = Cell.getCellIdFromLatLon(this.lat, this.lon);
         } else {
             this.cellId = BigInt(data.wild.cell).toString();
         }
