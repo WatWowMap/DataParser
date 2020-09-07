@@ -1,6 +1,15 @@
 # DataParser  
 
-Raw data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/RealDeviceMap) `/raw` endpoint  
+Raw proto data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/RealDeviceMap) `/raw` endpoint  
+
+Currently parses the following proto responses:  
+- GetPlayerResponse (Method 2)
+- ~~GetHoloInventoryResponse (Method 4)~~ (Soon)
+- FortSearchResponse (Method 101)
+- EncounterResponse: (Method 102)
+- FortDetailsResponse (Method 104)
+- GetMapObjectsResponse (Method 106)
+- GymGetInfoResponse (Method 156)
 
 ## Prerequisites  
 - [MySQL 8](https://dev.mysql.com/downloads/mysql/) or [MariaDB 10](https://mariadb.org/download/) database server  
