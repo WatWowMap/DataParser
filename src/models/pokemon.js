@@ -43,8 +43,8 @@ class Pokemon {
             this.costume = data.costume;
             this.weather = data.weather;
             this.gender = data.gender;
-            this.spawnId = data.spawn_id ? BigInt(data.spawn_id).toString() : null;
-            this.cellId = data.cell_id ? BigInt(data.cell_id).toString() : null;
+            this.spawnId = data.spawn_id;
+            this.cellId = data.cell_id;
             this.firstSeenTimestamp = data.first_seen_timestamp || new Date().getTime() / 1000;
             this.expireTimestamp = data.expire_timestamp;
             this.expireTimestampVerified = data.expire_timestamp_verified;
@@ -122,7 +122,7 @@ class Pokemon {
             }
         }
         if (data.wild.cell === undefined || data.wild.cell === null) {
-            data.wild.cell = Cell.getCellIdFromLatLon(this.lat, this.lon);
+            this.cellId = Cell.getCellIdFromLatLon(this.lat, this.lon);
         } else {
             this.cellId = BigInt(data.wild.cell).toString();
         }
