@@ -59,6 +59,7 @@ class RouteController {
             }
 
             trainerLevel = 30;
+            uuid = `PogoDroid ${req.headers['origin']}`;
             username = `PogoDroid ${req.headers['origin']}`;
             latTarget = json[0]['lat'];
             lonTarget = json[0]['lng'];
@@ -66,7 +67,7 @@ class RouteController {
             contents = [];
             for (let message of json) {
                 if (message['raw'] === false) {
-                    console.warn(`Ignoring non-raw message from ${username}`)
+                    console.warn(`Ignoring non-raw message from ${username}`);
                     continue;
                 }
 
@@ -92,9 +93,17 @@ class RouteController {
             uuid = json['uuid'];
             latTarget = json['lat_target'];
             lonTarget = json['lon_target'];
+
+            if (uuid && latTarget && lonTarget) {
+                try {
+                    await Device.setLastLocation(uuid, latTarget, lonTarget);
+                } catch (err) {
+                    console.error('[Raw] Error:', err);
+                }
+            }
         }
 
-        return this.handleData(res, contents, trainerLevel, username, uuid, latTarget, lonTarget);
+        return this.handleData(res, contents, trainerLevel, username, uuid);
     }
 
     /**
@@ -107,7 +116,7 @@ class RouteController {
      * @param {*} lastTarget
      * @param {*} lonTarget
      */
-    async handleData(res, contents, trainerLevel, username, uuid, latTarget, lonTarget) {
+    async handleData(res, contents, trainerLevel, username, uuid) {
         if (username && trainerLevel > 0) {
             let oldLevel = this.levelCache[username];
             if (oldLevel !== trainerLevel) {
@@ -119,14 +128,6 @@ class RouteController {
             console.error('[Raw] Invalid GMO');
             return res.sendStatus(400);
         }
-        if (uuid && latTarget && lonTarget) {
-            try {
-                await Device.setLastLocation(uuid, latTarget, lonTarget);
-            } catch (err) {
-                console.error('[Raw] Error:', err);
-            }
-        }
-
         let wildPokemons = [];
         let nearbyPokemons = [];
         let clientWeathers = [];
