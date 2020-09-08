@@ -1,3 +1,4 @@
+![Node.js CI](https://github.com/versx/DataParser/workflows/Node.js%20CI/badge.svg)
 # DataParser  
 
 Raw proto data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/RealDeviceMap) `/raw` endpoint  
