@@ -58,9 +58,21 @@ class RouteController {
                 return;
             }
 
+            trainerLevel = 30;
+            username = `PogoDroid ${req.headers['origin']}`;
+            latTarget = json[0]['lat'];
+            lonTarget = json[0]['lng'];
+
             contents = [];
             for (let message of json) {
                 if (message['raw'] === false) {
+                    console.warn(`Ignoring non-raw message from ${username}`)
+                    continue;
+                }
+
+                // PD is sending more then we actually need.
+                // let's only care about certain protos
+                if (![2, 106, 102, 104, 101, 156].includes(parseInt(message['type']))) {
                     continue;
                 }
 
@@ -69,11 +81,6 @@ class RouteController {
                     'method': parseInt(message['type']) || 106
                 });
             }
-
-            trainerLevel = 30;
-            username = `PogoDroid ${req.headers['origin']}`;
-            latTarget = json[0]['lat'];
-            lonTarget = json[0]['lng'];
         // handle iOS data
         } else {
             if (json['payload']) {
@@ -301,7 +308,6 @@ class RouteController {
                     break;
                 default:
                     console.error('[Raw] Invalid method or data provided:', method, data);
-                    return;
             }
         }
 
