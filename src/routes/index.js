@@ -35,8 +35,8 @@ class RouteController {
 
     /**
      * Handle incoming /raw data
-     * @param {*} req 
-     * @param {*} res 
+     * @param {*} req
+     * @param {*} res
      */
     async handleRawData(req, res) {
         let json = req.body;
@@ -44,12 +44,63 @@ class RouteController {
             console.error('[Raw] Bad data');
             return res.sendStatus(400);
         }
-        if (json['payload']) {
-            json['contents'] = [json];
+
+        let contents;
+        let trainerLevel = 0;
+        let username;
+        let uuid;
+        let latTarget;
+        let lonTarget;
+
+        // handle Android/PogoDroid data
+        if (Array.isArray(json)) {
+            if (json.length === 0) {
+                return;
+            }
+
+            contents = [];
+            for (let message of json) {
+                if (message['raw'] === false) {
+                    continue;
+                }
+
+                contents.push({
+                    'data': message['payload'],
+                    'method': parseInt(message['type']) || 106
+                });
+            }
+
+            trainerLevel = 30;
+            username = `PogoDroid ${req.headers['origin']}`;
+            latTarget = json[0]['lat'];
+            lonTarget = json[0]['lng'];
+        // handle iOS data
+        } else {
+            if (json['payload']) {
+                json['contents'] = [json];
+            }
+            contents = json['contents'] || json['protos'] || json['gmo'];
+            trainerLevel = parseInt(json['trainerlvl'] || json['trainerLevel']) || 0;
+            username = json['username'];
+            uuid = json['uuid'];
+            latTarget = json['lat_target'];
+            lonTarget = json['lon_target'];
         }
-    
-        let trainerLevel = parseInt(json['trainerlvl'] || json['trainerLevel']) || 0;
-        let username = json['username'];
+
+        return this.handleData(res, contents, trainerLevel, username, uuid, latTarget, lonTarget);
+    }
+
+    /**
+     * Handle data
+     * @param {*} res
+     * @param {*} contents
+     * @param {*} trainerLevel
+     * @param {*} username
+     * @param {*} uuid
+     * @param {*} lastTarget
+     * @param {*} lonTarget
+     */
+    async handleData(res, contents, trainerLevel, username, uuid, latTarget, lonTarget) {
         if (username && trainerLevel > 0) {
             let oldLevel = this.levelCache[username];
             if (oldLevel !== trainerLevel) {
@@ -57,14 +108,10 @@ class RouteController {
                 this.levelCache[username] = trainerLevel;
             }
         }
-        let contents = json['contents'] || json['protos'] || json['gmo'];
         if (!contents) {
             console.error('[Raw] Invalid GMO');
             return res.sendStatus(400);
         }
-        let uuid = json['uuid'];
-        let latTarget = json['lat_target'];
-        let lonTarget = json['lon_target'];
         if (uuid && latTarget && lonTarget) {
             try {
                 await Device.setLastLocation(uuid, latTarget, lonTarget);
@@ -84,12 +131,11 @@ class RouteController {
         let encounters = [];
         let cells = [];
         let playerData = [];
-    
+
         let isEmptyGMO = true;
         let isInvalidGMO = true;
         let containsGMO = false;
-        let isMadData = false;
-    
+
         for (let i = 0; i < contents.length; i++) {
             const rawData = contents[i];
             let data = {};
@@ -97,16 +143,11 @@ class RouteController {
             if (rawData['data']) {
                 data = rawData['data'];
                 method = parseInt(rawData['method']) || 106;
-            } else if (rawData['payload']) {
-                data = rawData['payload'];
-                method = parseInt(rawData['type']) || 106;
-                isMadData = true;
-                username = 'PogoDroid';
             } else {
                 console.error('[Raw] Unhandled proto:', rawData);
                 return res.sendStatus(400);
             }
-    
+
             switch (method) {
                 case RpcMethod.GetPlayerResponse:
                     try {
@@ -145,7 +186,7 @@ class RouteController {
                     }
                     break;
                 case RpcMethod.EncounterResponse:
-                    if (config.parse.encounters && trainerLevel >= 30 || isMadData !== false) {
+                    if (config.parse.encounters && trainerLevel >= 30) {
                         try {
                             let er = POGOProtos.Networking.Responses.EncounterResponse.decode(base64_decode(data));
                             if (er && er.status === POGOProtos.Networking.Responses.EncounterResponse.Status.ENCOUNTER_SUCCESS) {
@@ -219,7 +260,7 @@ class RouteController {
                                     });
                                 });
                             }
-            
+
                             if (wildPokemons.length === 0 && nearbyPokemons.length === 0 && forts.length === 0) {
                                 cells.forEach(cell => {
                                     let count = this.emptyCells[cell];
@@ -233,7 +274,7 @@ class RouteController {
                                         cells.push(cell);
                                     }
                                 });
-                                
+
                                 console.debug('[Raw] GMO is empty.');
                             } else {
                                 cells.forEach(cell => this.emptyCells[cell] = 0);
@@ -267,7 +308,7 @@ class RouteController {
         if (!this.consumers[username]) {
             this.consumers[username] = new Consumer(username);
         }
-    
+
         let total = wildPokemons.length + nearbyPokemons.length + clientWeathers.length + forts.length + fortDetails.length + gymInfos.length + quests.length + encounters.length + cells.length;
         let startTime = process.hrtime();
         if (cells.length > 0) {
