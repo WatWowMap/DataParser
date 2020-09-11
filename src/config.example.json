@@ -7,7 +7,7 @@
         "port": 3306,
         "username": "user123",
         "password": "pass123",
-        "database": "rdmdb",
+        "database": "bjsdb",
         "charset": "utf8mb4",
         "connectionLimit": 1000
     },
