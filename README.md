@@ -1,3 +1,4 @@
+![Node.js CI](https://github.com/versx/DataParser/workflows/Node.js%20CI/badge.svg)
 # DataParser  
 
 Raw proto data parser alternative to [RealDeviceMap](https://github.com/RealDeviceMap/RealDeviceMap) `/raw` endpoint  
@@ -44,7 +45,7 @@ Currently parses the following proto responses:
         // Database password for authentication
         "password": "pass123",
         // Database name to write data to
-        "database": "rdmdb",
+        "database": "bjsdb",
         // Database character set to use
         "charset": "utf8mb4",
         // Database pool maximum connection limit
