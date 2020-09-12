@@ -16,7 +16,7 @@ const instances = config.clusters || 4;
 // TODO: Add raw proto to redis
 // TODO: Loop redis insert into mysql
 
-const run = async () => {
+(async () => {
     // Check if cluster node is master or child
     if (cluster.isMaster) {
         console.log(`[Cluster] Master ${process.pid} is running`);
@@ -75,10 +75,4 @@ const run = async () => {
             WebhookController.instance.start();
         }
     }
-};
-
-run().then(() => {
-    console.log('Initialized');
-}).catch(err => {
-    console.error('Error:', err);
-});
+})();

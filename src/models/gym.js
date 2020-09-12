@@ -60,7 +60,7 @@ class Gym {
             this.raidPokemonCp = 0;
             this.raidPokemonForm = 0;
             this.raidPokemonGender = 0;
-            this.raidPokemonCostume = 0; // TODO:
+            this.raidPokemonCostume = 0;
             this.raidPokemonEvolution = null;
             if (data.fort.raid_info) {
                 this.raidEndTimestamp = data.fort.raid_info.raid_end_ms / 1000;
@@ -75,7 +75,6 @@ class Gym {
                     this.raidPokemonCp = data.fort.raid_info.raid_pokemon.cp;
                     this.raidPokemonForm = data.fort.raid_info.raid_pokemon.pokemon_display.form;
                     this.raidPokemonGender = data.fort.raid_info.raid_pokemon.pokemon_display.gender;
-                    // TODO: VV Double check
                     if (data.fort.raid_info.raid_pokemon.pokemon_display.pokemon_evolution) {
                         this.raidPokemonEvolution = data.fort.raid_info.raid_pokemon.pokemon_display.pokemon_evolution;
                     }
@@ -168,7 +167,7 @@ class Gym {
         if (!oldGym) {
             WebhookController.instance.addGymEvent(this.toJson('gym'));
             WebhookController.instance.addGymInfoEvent(this.toJson('gym-info'));
-            let raidBattleTime = new Date((this.raidBattleTimestamp || 0) * 1000); // TODO: Probably going to get a divide by zero error >.>
+            let raidBattleTime = new Date((this.raidBattleTimestamp || 0) * 1000);
             let raidEndTime = Date((this.raidEndTimestamp || 0) * 1000);
             let now = new Date().getTime() / 1000;            
             

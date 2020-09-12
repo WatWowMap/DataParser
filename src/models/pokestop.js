@@ -280,7 +280,7 @@ class Pokestop {
                     break;
                 case ConditionType.PokemonCategory:
                     if (info.with_pokemon_category.category_name) {
-                        infoData['category_name'] = info.with_pokemon_category.category_name; // TODO: Does with_pokemon_category.category_name exist?
+                        infoData['category_name'] = info.with_pokemon_category.category_name;
                     }
                     if (info.with_pokemon_category.pokemon_ids) {
                         infoData['pokemon_ids'] = info.with_pokemon_category.pokemon_ids;
@@ -308,11 +308,11 @@ class Pokestop {
                     infoData['character_category_ids'] = info.with_invasion_character.category.map(x => parseInt(x));
                     break;
                 case ConditionType.NpcCombat:
-                    infoData['win'] = info.with_npc_combat.requires_win || false; // TODO: requires_win exists?
+                    infoData['win'] = info.with_npc_combat.requires_win || false;
                     infoData['trainer_ids'] = info.with_npc_combat.combat_npc_trainer_id;
                     break;
                 case ConditionType.PvpCombat:
-                    infoData['win'] = info.with_pvp_combat.requires_win || false; // TODO: requires_win exists?
+                    infoData['win'] = info.with_pvp_combat.requires_win || false;
                     infoData['template_ids'] = info.with_pvp_combat.combat_league_template_id;
                     break;
                 case ConditionType.Buddy:
