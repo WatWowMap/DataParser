@@ -480,7 +480,7 @@ class Pokemon {
             // Check if we need to update IV and old pokemon atk_id is not set and new pokemon atk_id is set
             if (updateIV && !oldPokemon.atkIv && this.atkIv) {
                 WebhookController.instance.addPokemonEvent(this.toJson());
-                //InstanceController.instance.gotIV(this);
+                await RedisClient.publish('pokemon_got_iv', JSON.stringify(this));
                 this.changed = now;
             } else {
                 this.changed = oldPokemon.changed || now;
@@ -549,6 +549,9 @@ class Pokemon {
         if (!oldPokemon) {
             WebhookController.instance.addPokemonEvent(this.toJson());
             await RedisClient.publish('pokemon_add_queue', JSON.stringify(this));
+            if (this.atkIv) {
+                await RedisClient.publish('pokemon_got_iv', JSON.stringify(this));
+            }
         }
     }
 
