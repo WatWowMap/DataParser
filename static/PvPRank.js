@@ -184,7 +184,7 @@ const insertCurrentPokemon = async (league, pokemonId, formId, pokemon) => {
                     stamina: attack,
                     cp: currentValue.cp,
                     level: currentValue.level,
-                    percent: currentValue.percent,
+                    percent: currentValue.percent / 100,
                     rank: currentValue.rank,
                     value: currentValue.value
                 };
