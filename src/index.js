@@ -6,8 +6,6 @@ const helmet = require('helmet');
 const app = express();
 
 const config = require('./config.json');
-const Migrator = require('./services/migrator.js');
-const utils = require('./services/utils.js');
 const WebhookController = require('./services/webhook.js');
 const instances = config.clusters || 4;
 
@@ -21,15 +19,6 @@ const instances = config.clusters || 4;
     if (cluster.isMaster) {
         console.log(`[Cluster] Master ${process.pid} is running`);
 
-        // Start database migrator
-        const dbMigrator = new Migrator();
-        await dbMigrator.load();
-
-        // Wait until migrations are done to proceed
-        while (!dbMigrator.done) {
-            await utils.snooze(1000);
-        }
-        
         // Fork workers
         for (let i = 0; i < instances; i++) {
             cluster.fork();
