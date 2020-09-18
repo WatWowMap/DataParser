@@ -11,6 +11,10 @@
         "charset": "utf8mb4",
         "connectionLimit": 1000
     },
+    "logs": {
+        "level": 4,
+        "file": false
+    },
     "parse": {
         "pokemon": true,
         "encounters": true,

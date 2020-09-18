@@ -51,6 +51,21 @@ Currently parses the following proto responses:
         // Database pool maximum connection limit
         "connectionLimit": 1000
     },
+    // Logging options
+    "logs": {
+        /** Log level to set, available options are:
+         * debug: 4
+         * log: 3
+         * info: 2
+         * warn: 1
+         * error: 0
+         * line: 1
+         * turn off all logging: -1
+         */
+        "level": 4,
+        // Enable file logging to /logs folder
+        "file": false
+    },
     // Determine what type of data to parse
     "parse": {
         // Wild and nearby Pokemon
