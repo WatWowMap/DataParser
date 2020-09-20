@@ -18,13 +18,13 @@ const calculateAllRanks = async () => {
             if (pokemonObject[pokemonId].forms[formId].attack) {
                 calculateTopRanks(pokemonId, formId, 1500);
             }
-        }   
+        }
     }
 
-    //fs.writeFileSync('./great_pvp_ranks.json',JSON.stringify(pokemon, null, 4));   
+    //fs.writeFileSync('./great_pvp_ranks.json',JSON.stringify(pokemon, null, 4));
     console.log('[PvP] About to write great_league pvp data to SQL table');
     await writePvPData(pokemon, 'great_league');
-    console.log('[PvP] All data written');
+    console.log('[PvP] Done writing great_league data to SQL');
 
 
     for (let pokemonId in pokemonObject) {
@@ -38,10 +38,13 @@ const calculateAllRanks = async () => {
         }
     }
 
-    //fs.writeFileSync('./ultra_pvp_ranks.json',JSON.stringify(pokemon, null, 4));   
+    //fs.writeFileSync('./ultra_pvp_ranks.json',JSON.stringify(pokemon, null, 4));
     console.log('[PvP] About to write ultra_league pvp data to SQL table');
     await writePvPData(pokemon, 'ultra_league');
     console.log('[PvP] Done writing ultra_league data to SQL');
+
+    console.log('[PvP] Done writing all data. Exiting the script.');
+    process.exit();
 };
 
 const calculateTopRanks = (pokemonId, formId, cap) => {
@@ -49,11 +52,11 @@ const calculateTopRanks = (pokemonId, formId, cap) => {
     let currentPokemon = initializeBlankPokemon();
     let bestStat = { attack: 0, defense: 0, stamina: 0, value: 0 };
     let arrayToSort = [];
-    
+
     if (!pokemon[pokemonId]) {
         pokemon[pokemonId] = {};
     }
-   
+
     for (let a = 0; a <= 15; a++) {
         for (let d = 0; d <= 15; d++) {
             for (let s = 0; s <= 15; s++) {
@@ -73,16 +76,16 @@ const calculateTopRanks = (pokemonId, formId, cap) => {
         let percent = precisionRound((arrayToSort[i].value / best) * 100, 2);
         arrayToSort[i].percent = percent;
         currentPokemon[arrayToSort[i].attack][arrayToSort[i].defense][arrayToSort[i].stamina].percent = percent;
-        currentPokemon[arrayToSort[i].attack][arrayToSort[i].defense][arrayToSort[i].stamina].rank = i + 1;        
+        currentPokemon[arrayToSort[i].attack][arrayToSort[i].defense][arrayToSort[i].stamina].rank = i + 1;
     }
-    
+
     if (formId >= 0) {
         if (!pokemon[pokemonId].forms) {
             pokemon[pokemonId].forms = {};
         }
         pokemon[pokemonId].forms[formId] = currentPokemon;
     } else {
-        pokemon[pokemonId] = currentPokemon;  
+        pokemon[pokemonId] = currentPokemon;
     }
     return currentPokemon;
 };
@@ -97,7 +100,7 @@ const calculateBestPvPStat = (pokemonId, formId, attack, defense, stamina, cap) 
             let stat = calculatePvPStat(pokemonId, formId, i, attack, defense, stamina);
             if (stat > bestStat) {
                 bestStat = stat;
-                level = i;   
+                level = i;
                 bestCP = cp;
             }
         }
