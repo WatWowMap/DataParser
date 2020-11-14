@@ -28,7 +28,7 @@ class Spawnpoint extends Model {
 
     async save(options = null) {
         return await super.save(options === null ? {
-            fields: this.despawnSecond === null ? [] : undefined,
+            fields: this.despawnSecond === null ? ['lat', 'lon', 'updated'] : undefined,
         } : options);
     }
 }
