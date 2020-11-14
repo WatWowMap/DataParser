@@ -28,6 +28,7 @@
     "google-protobuf": "^3.13.0",
     "helmet": "^4.1.0",
     "mysql": "^2.18.1",
+    "mysql2": "^2.2.5",
     "nodes2ts": "^2.0.0",
     "pogo-protos": "git+https://github.com/Furtif/pogo-protos.git",
     "redis": "^3.0.2",

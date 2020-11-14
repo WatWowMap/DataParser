@@ -12,8 +12,8 @@ class Spawnpoint extends Model {
             id: pokemon.spawnId,
             lat: pokemon.lat,
             lon: pokemon.lon,
-            updated: updated,
-            despawnSecond: despawnSecond,
+            updated,
+            despawnSecond,
         });
     }
 
