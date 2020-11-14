@@ -36,7 +36,6 @@ Spawnpoint.init({
     id: {
         type: DataTypes.BIGINT(20).UNSIGNED,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
     },
     lat: {
