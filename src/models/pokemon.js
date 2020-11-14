@@ -117,7 +117,7 @@ class Pokemon {
                 }
             } else {
                 spawnpoint = Spawnpoint.fromPokemon(this, null, Math.round(data.timestampMs / 1000));
-                await spawnpoint.save();
+                await spawnpoint.upsert();
                 this.expireTimestamp = null;
             }
         }
@@ -285,7 +285,7 @@ class Pokemon {
                     }
                 } else {
                     spawnpoint = Spawnpoint.fromPokemon(this);
-                    await spawnpoint.save();
+                    await spawnpoint.upsert();
                 }
             }
         }
@@ -533,7 +533,7 @@ class Pokemon {
             }
             spawnpoint = Spawnpoint.fromPokemon(this, secondOfHour, this.updated);
             try {
-                await spawnpoint.save();
+                await spawnpoint.upsert();
             } catch (err) {
                 console.error('[Spawnpoint] Error:', err);
             }

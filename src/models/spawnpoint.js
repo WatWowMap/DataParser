@@ -26,10 +26,10 @@ class Spawnpoint extends Model {
         return await Spawnpoint.findByPk(spawnpointId);
     }
 
-    async save(options = null) {
-        return await super.save(options === null ? {
+    async upsert() {
+        return await Spawnpoint.upsert(this, {
             fields: this.despawnSecond === null ? ['lat', 'lon', 'updated'] : undefined,
-        } : options);
+        });
     }
 }
 Spawnpoint.init({
