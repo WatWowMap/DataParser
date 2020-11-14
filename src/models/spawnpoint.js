@@ -22,12 +22,12 @@ class Spawnpoint extends Model {
      * @param spawnpointId
      * @deprecated Use Spawnpoint.findByPk.
      */
-    static async getById(spawnpointId) {
-        return await Spawnpoint.findByPk(spawnpointId);
+    static getById(spawnpointId) {
+        return Spawnpoint.findByPk(spawnpointId);
     }
 
-    async upsert() {
-        return await Spawnpoint.upsert(this, {
+    upsert() {
+        return Spawnpoint.upsert(this.toJSON(), {
             fields: this.despawnSecond === null ? ['lat', 'lon', 'updated'] : undefined,
         });
     }
